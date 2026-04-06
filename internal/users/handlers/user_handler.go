@@ -8,6 +8,7 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/internal/users/models"
 	"github.com/JooseMM/nutripia-backend-api/internal/users/models/value_objects"
 	"github.com/JooseMM/nutripia-backend-api/internal/users/repository/interfaces"
+	"github.com/JooseMM/nutripia-backend-api/pkg/errors"
 	"github.com/google/uuid"
 )
 
@@ -29,9 +30,23 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errors := dto.Validate()
-	if errors != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		e := errors.ValidationError(*validationErr)
+
+		json, jsonErr := json.Marshal(e)
+		if jsonErr != nil {
+			http.Error(
+				w,
+				"Error tryinh to serialize an error response",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
+		return
 	}
 
 	now := time.Now()

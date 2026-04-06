@@ -14,11 +14,13 @@ func main() {
 	var db, err = storage.InitDB("host=localhost user=postgres password=Password123! dbname=nutripia_db port=5432 sslmode=disable")
 	if err != nil {
 		fmt.Print("Error")
+		return
 	}
 
 	err = db.AutoMigrate(&models.User{})
 	if err != nil {
 		fmt.Print("Migration failed: ", err)
+		return
 	}
 
 	mux := http.NewServeMux()

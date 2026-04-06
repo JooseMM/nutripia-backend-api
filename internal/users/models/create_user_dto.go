@@ -3,8 +3,6 @@ package models
 import (
 	"strings"
 	"time"
-
-	"github.com/JooseMM/nutripia-backend-api/core/errors"
 )
 
 type CreateUserDto struct {
@@ -15,62 +13,57 @@ type CreateUserDto struct {
 	BirthDate    time.Time `json:"birth_date"`
 }
 
-func (d *CreateUserDto) Validate() []*errors.ValidationError {
-	var errors []*errors.ValidationError
+func (d *CreateUserDto) Validate() *string {
+	var errorList []string
 
 	d.Firstname = strings.TrimSpace(d.Firstname)
 	d.Lastname = strings.TrimSpace(d.Lastname)
-	nameErr := d.validateName()
-	if nameErr != nil {
-		errors = append(errors, nameErr...)
-	}
+
+	errorList = append(errorList, d.validateName()...)
 
 	d.EmailAddress = strings.TrimSpace(d.EmailAddress)
 	emailErr := d.validateEmailAddress()
 	if emailErr != nil {
-		errors = append(errors, emailErr...)
+		errorList = append(errorList, *emailErr)
 	}
 
 	d.Password = strings.TrimSpace(d.Password)
 	passErr := d.validatePassword()
 	if passErr != nil {
-		errors = append(errors, passErr)
+		errorList = append(errorList, *passErr)
 	}
 
-	return errors
+	if len(errorList) == 0 {
+		return nil
+	}
+
+	finalMsg := strings.Join(errorList, ",\n")
+	return &finalMsg
 }
 
-func (d *CreateUserDto) validateEmailAddress() []*errors.ValidationError {
-
+func (d *CreateUserDto) validateEmailAddress() *string {
 	return nil
 }
 
-func (d *CreateUserDto) validateName() []*errors.ValidationError {
-	var errorList []*errors.ValidationError
+func (d *CreateUserDto) validateName() []string {
+	var errList []string
 
 	if d.Firstname == "" {
-		errorList = append(errorList, &errors.ValidationError{
-			Field:   "firstname",
-			Message: "is required",
-		})
+		errList = append(errList, "firstname: is required")
 	}
 
 	if d.Lastname == "" {
-		errorList = append(errorList, &errors.ValidationError{
-			Field:   "lastname",
-			Message: "is required",
-		})
+		errList = append(errList, "lastname: is required")
 	}
 
-	return errorList
+	return errList
 }
 
-func (d *CreateUserDto) validatePassword() *errors.ValidationError {
+func (d *CreateUserDto) validatePassword() *string {
 	if d.Password == "" {
-		return &errors.ValidationError{
-			Field:   "lastname",
-			Message: "is required",
-		}
+		var description = "lastname: is required"
+		return &description
 	}
+
 	return nil
 }
