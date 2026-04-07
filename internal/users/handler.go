@@ -2,11 +2,12 @@ package users
 
 import (
 	"encoding/json"
+	"net/http"
+
 	userModels "github.com/JooseMM/nutripia-backend-api/internal/users/models"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 	"github.com/google/uuid"
-	"net/http"
 )
 
 type IUserHandler interface {
@@ -25,7 +26,7 @@ func NewUserHandler(service IUserService) IUserHandler {
 
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var dto userModels.CreateUserRequest
+	var dto userModels.UserIdentityDto
 
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
@@ -51,7 +52,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, failure := h.service.CreateUser(dto, r.Context())
+	id, failure := h.service.CreateUser(&dto, r.Context())
 	if failure != nil {
 		errJson, err := json.Marshal(failure)
 		if err != nil {
@@ -69,7 +70,11 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := &userModels.CreateUserResponse{UserId: id.String()}
+	idStr := id.String()
+	response := &response.ApiResponse[string]{
+		Success: true,
+		Data:    &idStr,
+	}
 	responseJson, responseErr := json.Marshal(response)
 	if responseErr != nil {
 		http.Error(
