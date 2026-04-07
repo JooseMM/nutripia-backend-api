@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/JooseMM/nutripia-backend-api/cmd/app/app"
 	"github.com/JooseMM/nutripia-backend-api/internal/storage"
-	"github.com/JooseMM/nutripia-backend-api/internal/users/handlers"
-	"github.com/JooseMM/nutripia-backend-api/internal/users/models"
-	"github.com/JooseMM/nutripia-backend-api/internal/users/repository"
+	userModels "github.com/JooseMM/nutripia-backend-api/internal/users/models"
 )
 
 func main() {
@@ -17,7 +16,7 @@ func main() {
 		return
 	}
 
-	err = db.AutoMigrate(&models.User{})
+	err = db.AutoMigrate(&userModels.User{})
 	if err != nil {
 		fmt.Print("Migration failed: ", err)
 		return
@@ -25,9 +24,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	userRepo := repository.NewUserRepository(db)
-	userHandler := handlers.NewUserHandler(userRepo)
-	mux.HandleFunc("POST /users", userHandler.Create)
+	app := app.NewApp(db)
+	mux.HandleFunc("POST /users", app.UserHandler.Create)
 
 	fmt.Println("Server starting on :3000...")
 	serveErr := http.ListenAndServe(":3000", mux)

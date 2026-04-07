@@ -1,4 +1,4 @@
-package errors
+package core
 
 type BaseError struct {
 	ErrorCode   string `json:"errorCode"`
