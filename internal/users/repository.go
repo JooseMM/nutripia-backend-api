@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"errors"
 
 	userModels "github.com/JooseMM/nutripia-backend-api/internal/users/models"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
@@ -46,6 +47,9 @@ func (r *postgresRepository) GetById(
 
 	result := r.db.WithContext(ctx).First(&user, "ID = ?", id)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, NotFound(id.String())
+		}
 		return nil, core.UnexpectedError(result.Error.Error())
 	}
 
@@ -73,6 +77,9 @@ func (r *postgresRepository) Delete(ctx context.Context, id *uuid.UUID) *core.Ba
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
+	if result.RowsAffected == 0 {
+		return NotFound(id.String())
+	}
 
 	return nil
 }
@@ -85,6 +92,9 @@ func (r *postgresRepository) GetByEmailAddress(
 
 	result := r.db.WithContext(ctx).First(&user, "email_address = ?", emailAddress)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, NotFound(emailAddress)
+		}
 		return nil, core.UnexpectedError(result.Error.Error())
 	}
 

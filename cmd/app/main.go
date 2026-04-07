@@ -23,12 +23,15 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-
+	protectedMux := app.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
+
 	mux.HandleFunc("POST /users", app.UserHandler.Create)
+	mux.HandleFunc("GET /users/{id}", app.UserHandler.GetById)
+	mux.HandleFunc("DELETE /users/{id}", app.UserHandler.DeleteById)
 
 	fmt.Println("Server starting on :3000...")
-	serveErr := http.ListenAndServe(":3000", mux)
+	serveErr := http.ListenAndServe(":3000", protectedMux)
 	if serveErr != nil {
 		fmt.Printf("Error starting server: %s\n", serveErr)
 	}

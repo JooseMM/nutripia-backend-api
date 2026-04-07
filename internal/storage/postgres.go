@@ -1,10 +1,9 @@
 package storage
 
 import (
-	"sync"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"sync"
 )
 
 var (

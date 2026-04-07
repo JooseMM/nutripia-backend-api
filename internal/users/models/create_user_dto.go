@@ -3,17 +3,23 @@ package users
 import (
 	"strings"
 	"time"
+
+	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
-type CreateUserDto struct {
+type CreateUserRequest struct {
 	Firstname    string    `json:"firstname"`
 	Lastname     string    `json:"lastname"`
-	EmailAddress string    `json:"email_address"`
+	EmailAddress string    `json:"emailAddress"`
 	Password     string    `json:"password"`
-	BirthDate    time.Time `json:"birth_date"`
+	BirthDate    time.Time `json:"birthDate"`
 }
 
-func (d *CreateUserDto) Validate() *string {
+type CreateUserResponse struct {
+	UserId string `json:"userId"`
+}
+
+func (d *CreateUserRequest) Validate() *core.BaseError {
 	var errorList []string
 
 	d.Firstname = strings.TrimSpace(d.Firstname)
@@ -37,15 +43,14 @@ func (d *CreateUserDto) Validate() *string {
 		return nil
 	}
 
-	finalMsg := strings.Join(errorList, ",\n")
-	return &finalMsg
+	return core.ValidationError(errorList)
 }
 
-func (d *CreateUserDto) validateEmailAddress() *string {
+func (d *CreateUserRequest) validateEmailAddress() *string {
 	return nil
 }
 
-func (d *CreateUserDto) validateName() []string {
+func (d *CreateUserRequest) validateName() []string {
 	var errList []string
 
 	if d.Firstname == "" {
@@ -59,7 +64,7 @@ func (d *CreateUserDto) validateName() []string {
 	return errList
 }
 
-func (d *CreateUserDto) validatePassword() *string {
+func (d *CreateUserRequest) validatePassword() *string {
 	if d.Password == "" {
 		var description = "lastname: is required"
 		return &description

@@ -10,7 +10,9 @@ import (
 )
 
 type IUserService interface {
-	CreateUser(dto userModels.CreateUserDto, ctx context.Context) (*uuid.UUID, *core.BaseError)
+	CreateUser(dto userModels.CreateUserRequest, ctx context.Context) (*uuid.UUID, *core.BaseError)
+	GetById(id *uuid.UUID, ctx context.Context) (*userModels.User, *core.BaseError)
+	DeleteOne(id *uuid.UUID, ctx context.Context) *core.BaseError
 }
 
 type UserService struct {
@@ -22,12 +24,12 @@ func NewUserService(repo IUserRepository) IUserService {
 }
 
 func (u *UserService) CreateUser(
-	dto userModels.CreateUserDto,
+	dto userModels.CreateUserRequest,
 	ctx context.Context,
 ) (*uuid.UUID, *core.BaseError) {
 
-	foundUser, unexpectedErr := u.Repo.GetByEmailAddress(ctx, dto.EmailAddress)
-	if foundUser != nil {
+	_, queryErr := u.Repo.GetByEmailAddress(ctx, dto.EmailAddress)
+	if queryErr == nil {
 		return nil, EmailAlreadyExisting(dto.EmailAddress)
 	}
 
@@ -49,8 +51,33 @@ func (u *UserService) CreateUser(
 
 	err := u.Repo.Create(ctx, user)
 	if err != nil {
-		return nil, unexpectedErr
+		return nil, queryErr
 	}
 
 	return &user.ID, nil
+}
+
+func (u *UserService) GetById(
+	id *uuid.UUID,
+	ctx context.Context,
+) (*userModels.User, *core.BaseError) {
+
+	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
+	if unexpectedErr != nil {
+		return nil, unexpectedErr
+	}
+
+	return foundUser, nil
+}
+
+func (u *UserService) DeleteOne(
+	id *uuid.UUID,
+	ctx context.Context,
+) *core.BaseError {
+	err := u.Repo.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
