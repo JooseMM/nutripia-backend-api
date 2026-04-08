@@ -1,2 +1,10 @@
 # Binary
 main
+# If you use 'go build -o app', ignore that too
+app
+# Ignore all executable binaries (common in Go)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib

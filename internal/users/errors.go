@@ -13,7 +13,7 @@ const (
 	EMAIL_IN_USE UserError = "USER_EMAIL_ALREADY_IN_USE"
 )
 
-func NotFound(filterTerm string) *core.BaseError {
+func UserNotFound(filterTerm string) *core.BaseError {
 	return &core.BaseError{
 		StatusCode:  http.StatusNotFound,
 		ErrorCode:   string(NOT_FOUND),
@@ -21,7 +21,7 @@ func NotFound(filterTerm string) *core.BaseError {
 	}
 }
 
-func EmailAlreadyExisting(email string) *core.BaseError {
+func UserEmailAlreadyExisting(email string) *core.BaseError {
 	return &core.BaseError{
 		StatusCode:  http.StatusConflict,
 		ErrorCode:   string(EMAIL_IN_USE),

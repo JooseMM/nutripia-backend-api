@@ -6,7 +6,8 @@ import (
 
 	"github.com/JooseMM/nutripia-backend-api/cmd/app/app"
 	"github.com/JooseMM/nutripia-backend-api/internal/storage"
-	userModels "github.com/JooseMM/nutripia-backend-api/internal/users/models"
+	userTypes "github.com/JooseMM/nutripia-backend-api/internal/users/types"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
 func main() {
@@ -16,15 +17,20 @@ func main() {
 		return
 	}
 
-	err = db.AutoMigrate(&userModels.User{})
+	err = db.AutoMigrate(&userTypes.User{})
 	if err != nil {
 		fmt.Print("Migration failed: ", err)
 		return
 	}
 
 	mux := http.NewServeMux()
-	protectedMux := app.RecoveryMiddleware(mux)
+	protectedMux := core.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
+
+	mux.HandleFunc("POST /body-measurements", app.MeasurementHandler.Create)
+	mux.HandleFunc("GET /body-measurements/{id}", app.MeasurementHandler.GetById)
+	mux.HandleFunc("DELETE /users/{id}", app.MeasurementHandler.DeleteById)
+
 
 	mux.HandleFunc("POST /users", app.UserHandler.Create)
 	mux.HandleFunc("GET /users/{id}", app.UserHandler.GetById)

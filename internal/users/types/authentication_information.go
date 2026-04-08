@@ -1,4 +1,4 @@
-package userModels
+package userTypes
 
 type AuthenticationInformation struct {
 	PasswordHash     string `gorm:"not null"`

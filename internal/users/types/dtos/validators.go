@@ -1,4 +1,4 @@
-package userModels
+package userDtos
 
 func ValidateEmailAddress(email string) *string {
 	return nil

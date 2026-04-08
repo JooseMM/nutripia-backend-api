@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	userModels "github.com/JooseMM/nutripia-backend-api/internal/users/models"
+	"github.com/JooseMM/nutripia-backend-api/internal/users/types"
+	"github.com/JooseMM/nutripia-backend-api/internal/users/types/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 	"github.com/google/uuid"
@@ -20,13 +21,13 @@ type UserHandler struct {
 	service IUserService
 }
 
-func NewUserHandler(service IUserService) IUserHandler {
+func NewMeasurementHandler(service IUserService) IUserHandler {
 	return &UserHandler{service}
 }
 
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var dto userModels.UserIdentityDto
+	var dto userDtos.UserIdentityDto
 
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
@@ -132,7 +133,7 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiResponse := &response.ApiResponse[userModels.User]{
+	apiResponse := &response.ApiResponse[userTypes.User]{
 		Success: true,
 		Data:    user,
 	}
