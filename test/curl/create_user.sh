@@ -1,4 +1,4 @@
-curl -v -X POST http://localhost:3000/users \
+curl -v -X POST http://localhost:3000/nutritionist \
   -H "Content-Type: application/json" \
   -d '{
     "firstname": "juanete",
