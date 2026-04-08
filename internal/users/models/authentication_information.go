@@ -2,6 +2,6 @@ package userModels
 
 type AuthenticationInformation struct {
 	PasswordHash     string `gorm:"not null"`
-	Role             string
+	Role             Role
 	IsEmailConfirmed bool
 }

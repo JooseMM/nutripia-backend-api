@@ -26,9 +26,10 @@ func main() {
 	protectedMux := app.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
 
-	mux.HandleFunc("POST /users", app.UserHandler.Create)
-	mux.HandleFunc("GET /users/{id}", app.UserHandler.GetById)
-	mux.HandleFunc("DELETE /users/{id}", app.UserHandler.DeleteById)
+	mux.HandleFunc("POST /nutritionist", app.UserHandler.Create)
+	mux.HandleFunc("GET /nutritionist/{id}", app.UserHandler.GetById)
+	mux.HandleFunc("PUT /nutritionist/{id}", app.UserHandler.UpdateById)
+	mux.HandleFunc("DELETE /nutritionist/{id}", app.UserHandler.DeleteById)
 
 	fmt.Println("Server starting on :3000...")
 	serveErr := http.ListenAndServe(":3000", protectedMux)

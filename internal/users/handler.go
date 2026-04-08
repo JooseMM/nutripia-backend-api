@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	userModels "github.com/JooseMM/nutripia-backend-api/internal/users/models"
@@ -14,6 +15,7 @@ type IUserHandler interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	GetById(w http.ResponseWriter, r *http.Request)
 	DeleteById(w http.ResponseWriter, r *http.Request)
+	UpdateById(w http.ResponseWriter, r *http.Request)
 }
 
 type UserHandler struct {
@@ -26,7 +28,7 @@ func NewUserHandler(service IUserService) IUserHandler {
 
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var dto userModels.UserIdentityDto
+	var dto userModels.CreateUserRequest
 
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
@@ -52,7 +54,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, failure := h.service.CreateUser(&dto, r.Context())
+	id, failure := h.service.CreateUser(&dto, userModels.CLIENT, r.Context())
 	if failure != nil {
 		errJson, err := json.Marshal(failure)
 		if err != nil {
@@ -190,6 +192,77 @@ func (h *UserHandler) DeleteById(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(int(err.StatusCode))
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(errResponse)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *UserHandler) UpdateById(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	rawId := r.PathValue("id")
+	var dto userModels.UpdateIdentityRequest
+
+	id, parseErr := uuid.Parse(rawId)
+	if parseErr != nil {
+		responseErr := core.ValidationError(
+			[]string{"The identifier provided in the URL path is not a valid UUID format."},
+		)
+		jsonResponse, jsonErr := json.Marshal(responseErr)
+		if jsonErr != nil {
+			http.Error(
+				w,
+				"Error trying to serialize a response",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		w.WriteHeader(int(responseErr.StatusCode))
+		w.Write(jsonResponse)
+		return
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Bad request: %s", err.Error()), http.StatusBadRequest)
+		return
+	}
+
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		json, jsonErr := json.Marshal(validationErr)
+		if jsonErr != nil {
+			http.Error(
+				w,
+				"Error trying to serialize a response",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
+		return
+	}
+
+	failure := h.service.UpdateIdentityInformation(&id, &dto, r.Context())
+	if failure != nil {
+		errJson, err := json.Marshal(failure)
+		if err != nil {
+			http.Error(
+				w,
+				"Error trying to serialize a response",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(int(failure.StatusCode))
+		w.Write(errJson)
 		return
 	}
 
