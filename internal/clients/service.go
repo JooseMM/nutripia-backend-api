@@ -1,69 +1,60 @@
-package users
+package clients
 
 import (
 	"context"
 	"time"
 
-	"github.com/JooseMM/nutripia-backend-api/internal/security"
-	"github.com/JooseMM/nutripia-backend-api/internal/users/types"
-	"github.com/JooseMM/nutripia-backend-api/internal/users/types/dtos"
+	clientTypes "github.com/JooseMM/nutripia-backend-api/internal/clients/types"
+	"github.com/JooseMM/nutripia-backend-api/internal/clients/types/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/google/uuid"
 )
 
-type IUserService interface {
-	CreateUser(dto *userDtos.CreateUserRequest, role userTypes.Role, ctx context.Context) (*uuid.UUID, *core.BaseError)
-	GetById(id *uuid.UUID, ctx context.Context) (*userTypes.User, *core.BaseError)
+type IClientService interface {
+	CreateUser(
+		dto *clientDtos.CreateClientRequest,
+		ctx context.Context,
+	) (*uuid.UUID, *core.BaseError)
+	GetById(id *uuid.UUID, ctx context.Context) (*clientTypes.Client, *core.BaseError)
 	DeleteOne(id *uuid.UUID, ctx context.Context) *core.BaseError
 	UpdateIdentityInformation(
 		id *uuid.UUID,
-		userDto *userDtos.UpdateIdentityRequest,
+		userDto *clientDtos.UpdateClientRequest,
 		ctx context.Context,
 	) *core.BaseError
 }
 
 type UserService struct {
-	Repo IUserRepository
+	Repo IClientRepository
 }
 
-func NewUserService(repo IUserRepository) IUserService {
+func NewClientService(repo IClientRepository) IClientService {
 	return &UserService{repo}
 }
 
 func (u *UserService) CreateUser(
-	userDto *userDtos.CreateUserRequest,
-	role userTypes.Role,
+	userDto *clientDtos.CreateClientRequest,
 	ctx context.Context,
 ) (*uuid.UUID, *core.BaseError) {
 
 	foundEmailOwner, queryEmailErr := u.Repo.GetByEmailAddress(ctx, userDto.EmailAddress)
-	if queryEmailErr != nil && queryEmailErr.ErrorCode != string(NOT_FOUND) {
+	if queryEmailErr != nil && queryEmailErr.ErrorCode != string(CLIENT_NOT_FOUND) {
 		return nil, queryEmailErr
 	}
 	if foundEmailOwner != nil {
 		return nil, UserEmailAlreadyExisting(userDto.EmailAddress)
 	}
 
-	hash, hashErr := security.HashPassword(userDto.Password)
-	if hashErr != nil {
-		return nil, core.UnexpectedError(hashErr.Error())
-	}
-
 	now := time.Now()
-	user := &userTypes.User{
+	user := &clientTypes.Client{
 		ID: uuid.New(),
-		UserIdentity: userTypes.UserIdentity{
+		ClientIdentity: clientTypes.ClientIdentity{
 			Firstname:    userDto.Firstname,
 			Lastname:     userDto.Lastname,
 			EmailAddress: userDto.EmailAddress,
 			DateBirth:    userDto.BirthDate,
 		},
-		AuthenticationInformation: userTypes.AuthenticationInformation{
-			Role:             role,
-			PasswordHash:     hash,
-			IsEmailConfirmed: false,
-		},
-		TrackingInformation: userTypes.TrackingInformation{
+		TrackingInformation: clientTypes.TrackingInformation{
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
@@ -80,7 +71,7 @@ func (u *UserService) CreateUser(
 func (u *UserService) GetById(
 	id *uuid.UUID,
 	ctx context.Context,
-) (*userTypes.User, *core.BaseError) {
+) (*clientTypes.Client, *core.BaseError) {
 
 	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
 	if unexpectedErr != nil {
@@ -104,7 +95,7 @@ func (u *UserService) DeleteOne(
 
 func (u *UserService) UpdateIdentityInformation(
 	id *uuid.UUID,
-	userDto *userDtos.UpdateIdentityRequest,
+	userDto *clientDtos.UpdateClientRequest,
 	ctx context.Context,
 ) *core.BaseError {
 	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
@@ -113,7 +104,7 @@ func (u *UserService) UpdateIdentityInformation(
 	}
 
 	foundEmailOwner, queryEmailErr := u.Repo.GetByEmailAddress(ctx, userDto.EmailAddress)
-	if queryEmailErr != nil && queryEmailErr.ErrorCode != string(NOT_FOUND) {
+	if queryEmailErr != nil && queryEmailErr.ErrorCode != string(CLIENT_NOT_FOUND) {
 		return queryEmailErr
 	}
 	if foundEmailOwner != nil && foundEmailOwner.ID != *id {

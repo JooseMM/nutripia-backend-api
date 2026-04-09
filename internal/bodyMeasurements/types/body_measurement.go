@@ -40,7 +40,7 @@ type BodyMeasurement struct {
 	Calf       float64
 	Ankle      float64
 
-	UserId    uuid.UUID `gorm:"index"`
+	ClientId  uuid.UUID `gorm:"index"`
 	CreatedAt time.Time `gorm:"index;type:date"`
 }
 
@@ -52,29 +52,30 @@ func (b *BodyMeasurement) ToDTO() *bodyMeasurementDtos.BodyMeasurementDto {
 		SittingHeight: b.SittingHeight,
 		ArmSpan:       b.ArmSpan,
 
-		Triceps:       b.Triceps,
-		Subscapular:   b.Subscapular,
-		Biceps:        b.Biceps,
-		IliacCrest:    b.IliacCrest,
-		Supraspinale:  b.Supraspinale,
-		Abdominal:     b.Abdominal,
-		FrontThigh:    b.FrontThigh,
-		MedialCalf:    b.MedialCalf,
+		Triceps:      b.Triceps,
+		Subscapular:  b.Subscapular,
+		Biceps:       b.Biceps,
+		IliacCrest:   b.IliacCrest,
+		Supraspinale: b.Supraspinale,
+		Abdominal:    b.Abdominal,
+		FrontThigh:   b.FrontThigh,
+		MedialCalf:   b.MedialCalf,
 
-		Head:          b.Head,
-		Neck:          b.Neck,
-		ArmRelaxed:    b.ArmRelaxed,
-		ArmFlex:       b.ArmFlex,
-		Forearm:       b.Forearm,
-		Wrist:         b.Wrist,
-		Chest:         b.Chest,
-		Waist:         b.Waist,
-		Hip:           b.Hip,
-		ThighHigh:     b.ThighHigh,
-		ThighLow:      b.ThighLow,
-		Calf:          b.Calf,
-		Ankle:         b.Ankle,
+		Head:       b.Head,
+		Neck:       b.Neck,
+		ArmRelaxed: b.ArmRelaxed,
+		ArmFlex:    b.ArmFlex,
+		Forearm:    b.Forearm,
+		Wrist:      b.Wrist,
+		Chest:      b.Chest,
+		Waist:      b.Waist,
+		Hip:        b.Hip,
+		ThighHigh:  b.ThighHigh,
+		ThighLow:   b.ThighLow,
+		Calf:       b.Calf,
+		Ankle:      b.Ankle,
 
 		CreatedAt: b.CreatedAt,
+		ClientId:  b.ClientId,
 	}
 }

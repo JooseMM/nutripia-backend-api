@@ -1,4 +1,4 @@
-package userDtos
+package nutritionistDtos
 
 func ValidateEmailAddress(email string) *string {
 	return nil

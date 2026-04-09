@@ -6,8 +6,8 @@ import (
 	"time"
 
 	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types/dtos"
-	"github.com/JooseMM/nutripia-backend-api/internal/users"
-	userTypes "github.com/JooseMM/nutripia-backend-api/internal/users/types"
+	"github.com/JooseMM/nutripia-backend-api/internal/clients"
+	userTypes "github.com/JooseMM/nutripia-backend-api/internal/clients/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 	"github.com/google/uuid"
@@ -21,7 +21,7 @@ type IBodyMeasurementHandler interface {
 }
 
 type BodyMeasurementHandler struct {
-	userService            users.IUserService
+	ClientService            clients.IClientService
 	bodyMeasurementService IBodyMeasurementService
 }
 
@@ -30,7 +30,7 @@ func NewBodyMeasurementHandler(
 	userService users.IUserService,
 ) IBodyMeasurementHandler {
 	return &BodyMeasurementHandler{
-		userService:            userService,
+		ClientService:            userService,
 		bodyMeasurementService: bodyMeasurementService,
 	}
 }
@@ -98,7 +98,7 @@ func (h *BodyMeasurementHandler) Create(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, userErr := h.userService.GetById(&dto.UserId, r.Context())
+	user, userErr := h.ClientService.GetById(&dto.ClientId, r.Context())
 	if userErr != nil {
 		response.WriteJSON(w, userErr.StatusCode, userErr)
 	}

@@ -1,4 +1,4 @@
-package userDtos
+package nutritionistDtos
 
 import (
 	"strings"
@@ -7,14 +7,14 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
-type UpdateIdentityRequest struct {
+type UpdateNutritionistIdentityRequest struct {
 	Firstname    string    `json:"firstname"`
 	Lastname     string    `json:"lastname"`
 	EmailAddress string    `json:"emailAddress"`
 	BirthDate    time.Time `json:"birthDate"`
 }
 
-func (d *UpdateIdentityRequest) Validate() *core.BaseError {
+func (d *UpdateNutritionistIdentityRequest) Validate() *core.BaseError {
 	var errorList []string
 
 	d.Firstname = strings.TrimSpace(d.Firstname)

@@ -1,11 +1,11 @@
-package userDtos
+package clientDtos
 
 import (
 	"github.com/google/uuid"
 	"time"
 )
 
-type UserDto struct {
+type ClientDto struct {
 	ID           uuid.UUID `json:"id"`
 	Firstname    string    `json:"firstname"`
 	Lastname     string    `json:"lastname"`

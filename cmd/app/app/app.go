@@ -2,26 +2,34 @@ package app
 
 import (
 	bodyMeasurement "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements"
-	"github.com/JooseMM/nutripia-backend-api/internal/users"
+	"github.com/JooseMM/nutripia-backend-api/internal/clients"
+	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist"
 	"gorm.io/gorm"
 )
 
 type App struct {
-	UserHandler        users.IUserHandler
-	MeasurementHandler bodyMeasurement.IBodyMeasurementHandler
+	NutritionistHandler nutritionist.INutritionistHandler
+	ClientHandler       clients.IClientHandler
+	MeasurementHandler  bodyMeasurement.IBodyMeasurementHandler
 }
 
 func NewApp(db *gorm.DB) *App {
-	userRepo := users.NewUserRepository(db)
-	userService := users.NewUserService(userRepo)
-	userHandler := users.NewMeasurementHandler(userService)
+	clientRepo := clients.NewClientRepository(db)
+	clientService := clients.NewClientService(clientRepo)
+
+	nutritionistRepo := nutritionist.NewNutritionistRepository(db)
+	nutritionistService := nutritionist.NewUserService(nutritionistRepo)
 
 	measurementRepo := bodyMeasurement.NewBodyMeasurementRepository(db)
 	measurementService := bodyMeasurement.NewBodyMeasurementService(measurementRepo)
-	measurementHandler := bodyMeasurement.NewBodyMeasurementHandler(measurementService, userService)
+	measurementHandler := bodyMeasurement.NewBodyMeasurementHandler(
+		measurementService,
+		clientService,
+	)
 
 	return &App{
-		UserHandler:        userHandler,
-		MeasurementHandler: measurementHandler,
+		ClientHandler:       clients.NewClientHandler(clientService),
+		NutritionistHandler: nutritionist.NewClientHandler(nutritionistService),
+		MeasurementHandler:  measurementHandler,
 	}
 }

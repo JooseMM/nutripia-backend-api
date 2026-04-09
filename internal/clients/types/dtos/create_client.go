@@ -1,21 +1,22 @@
-package userDtos
+package clientDtos
 
 import (
 	"strings"
 	"time"
 
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
+	"github.com/google/uuid"
 )
 
-type CreateUserRequest struct {
-	Firstname    string    `json:"firstname"`
-	Lastname     string    `json:"lastname"`
-	EmailAddress string    `json:"emailAddress"`
-	Password     string    `json:"password"`
-	BirthDate    time.Time `json:"birthDate"`
+type CreateClientRequest struct {
+	Firstname           string    `json:"firstname"`
+	Lastname            string    `json:"lastname"`
+	EmailAddress        string    `json:"emailAddress"`
+	BirthDate           time.Time `json:"birthDate"`
+	NutritionistOwnerId uuid.UUID `json:"nutritionistOwnerId"`
 }
 
-func (d *CreateUserRequest) Validate() *core.BaseError {
+func (d *CreateClientRequest) Validate() *core.BaseError {
 	var errorList []string
 
 	d.Firstname = strings.TrimSpace(d.Firstname)
@@ -27,12 +28,6 @@ func (d *CreateUserRequest) Validate() *core.BaseError {
 	emailErr := ValidateEmailAddress(d.EmailAddress)
 	if emailErr != nil {
 		errorList = append(errorList, *emailErr)
-	}
-
-	d.Password = strings.TrimSpace(d.Password)
-	passErr := ValidatePassword(d.Password)
-	if passErr != nil {
-		errorList = append(errorList, *passErr)
 	}
 
 	if len(errorList) == 0 {

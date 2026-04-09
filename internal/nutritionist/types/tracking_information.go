@@ -1,4 +1,4 @@
-package userTypes
+package nutritionistTypes
 
 import "time"
 

@@ -1,7 +1,6 @@
-package userTypes
+package nutritionistTypes
 
 type AuthenticationInformation struct {
 	PasswordHash     string `gorm:"not null"`
-	Role             Role
 	IsEmailConfirmed bool
 }

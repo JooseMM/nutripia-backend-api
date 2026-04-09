@@ -41,7 +41,7 @@ func (u *BodyMeasurementService) Create(
 	ctx context.Context,
 ) (*uuid.UUID, *core.BaseError) {
 	now := time.Now()
-	query, queryErr := u.Repo.GetByDate(ctx, &now, &dto.UserId)
+	query, queryErr := u.Repo.GetByDate(ctx, &now, &dto.ClientId)
 	if queryErr != nil && queryErr.ErrorCode != string(BODY_MEASUREMENT_RECORD_NOT_FOUND) {
 		return nil, queryErr
 	}
@@ -77,7 +77,7 @@ func (u *BodyMeasurementService) Create(
 		Calf:          dto.Calf,
 		Ankle:         dto.Ankle,
 
-		UserId:    dto.UserId,
+		ClientId:    dto.ClientId,
 		CreatedAt: time.Now(),
 	}
 

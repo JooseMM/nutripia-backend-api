@@ -38,4 +38,5 @@ type BodyMeasurementDto struct {
 	Ankle      float64 `json:"ankle"`
 
 	CreatedAt time.Time `json:"createdAt"`
+	ClientId  uuid.UUID `json:"clientId"`
 }

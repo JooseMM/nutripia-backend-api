@@ -40,7 +40,7 @@ type CreateMeasurementDto struct {
 	Calf       float64
 	Ankle      float64
 
-	UserId uuid.UUID
+	ClientId uuid.UUID
 }
 
 func (b *CreateMeasurementDto) Validate() *core.BaseError {

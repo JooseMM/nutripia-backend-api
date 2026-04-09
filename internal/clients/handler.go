@@ -1,35 +1,34 @@
-package users
+package clients
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/JooseMM/nutripia-backend-api/internal/users/types"
-	userDtos "github.com/JooseMM/nutripia-backend-api/internal/users/types/dtos"
+	"github.com/JooseMM/nutripia-backend-api/internal/clients/types/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 	"github.com/google/uuid"
 )
 
-type IUserHandler interface {
-	Create(w http.ResponseWriter, r *http.Request)
-	GetById(w http.ResponseWriter, r *http.Request)
-	DeleteById(w http.ResponseWriter, r *http.Request)
-	UpdateById(w http.ResponseWriter, r *http.Request)
+type IClientHandler interface {
+	CreateClient(w http.ResponseWriter, r *http.Request)
+	GetClientById(w http.ResponseWriter, r *http.Request)
+	DeleteClientById(w http.ResponseWriter, r *http.Request)
+	UpdateClientById(w http.ResponseWriter, r *http.Request)
 }
 
-type UserHandler struct {
-	service IUserService
+type ClientHandler struct {
+	service IClientService
 }
 
-func NewMeasurementHandler(service IUserService) IUserHandler {
-	return &UserHandler{service}
+func NewClientHandler(service IClientService) IClientHandler {
+	return &ClientHandler{service}
 }
 
-func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var dto userDtos.CreateUserRequest
+	var dto clientDtos.CreateClientRequest
 
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
@@ -93,7 +92,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseJson)
 }
 
-func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
+func (h *ClientHandler) GetClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	rawId := r.PathValue("id")
 
@@ -135,9 +134,9 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiResponse := &response.ApiResponse[userDtos.UserDto]{
+	apiResponse := &response.ApiResponse[clientDtos.ClientDto]{
 		Success: true,
-		Data: &userDtos.UserDto{
+		Data: &clientDtos.ClientDto{
 			ID:           user.ID,
 			Firstname:    user.Firstname,
 			Lastname:     user.Lastname,
@@ -148,7 +147,7 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *UserHandler) DeleteById(w http.ResponseWriter, r *http.Request) {
+func (h *ClientHandler) DeleteClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	rawId := r.PathValue("id")
 
@@ -193,11 +192,11 @@ func (h *UserHandler) DeleteById(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *UserHandler) UpdateById(w http.ResponseWriter, r *http.Request) {
+func (h *ClientHandler) UpdateClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	rawId := r.PathValue("id")
-	var dto userDtos.UpdateIdentityRequest
+	var dto nutritionistDtos.UpdateClientRequest
 
 	id, parseErr := uuid.Parse(rawId)
 	if parseErr != nil {

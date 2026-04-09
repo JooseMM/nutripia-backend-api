@@ -1,14 +1,12 @@
-package userTypes
+package clientTypes
 
 import (
 	"github.com/google/uuid"
 )
 
-type User struct {
+type Client struct {
 	ID uuid.UUID `gorm:"type:uuid;primaryKey"`
 
-	UserIdentity
-	AuthenticationInformation
-
+	ClientIdentity
 	TrackingInformation
 }

@@ -29,3 +29,9 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	})
 	return db, err
 }
+
+type PostgresRepository struct {
+	db *gorm.DB
+}
+
+
