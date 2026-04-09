@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/JooseMM/nutripia-backend-api/cmd/app/app"
+	bodyMeasurementTypes "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types"
 	"github.com/JooseMM/nutripia-backend-api/internal/storage"
 	userTypes "github.com/JooseMM/nutripia-backend-api/internal/users/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
@@ -18,6 +19,8 @@ func main() {
 	}
 
 	err = db.AutoMigrate(&userTypes.User{})
+	err = db.AutoMigrate(&bodyMeasurementTypes.BodyMeasurement{})
+
 	if err != nil {
 		fmt.Print("Migration failed: ", err)
 		return
@@ -34,7 +37,7 @@ func main() {
 
 	mux.HandleFunc("POST /body-measurements", app.MeasurementHandler.Create)
 	mux.HandleFunc("GET /body-measurements/{id}", app.MeasurementHandler.GetById)
-	mux.HandleFunc("DELETE /users/{id}", app.MeasurementHandler.DeleteById)
+	mux.HandleFunc("DELETE /body-measurements/{id}", app.MeasurementHandler.DeleteById)
 
 	fmt.Println("Server starting on :3000...")
 	serveErr := http.ListenAndServe(":3000", protectedMux)

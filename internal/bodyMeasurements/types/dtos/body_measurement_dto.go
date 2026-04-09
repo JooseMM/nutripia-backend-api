@@ -1,8 +1,8 @@
 package bodyMeasurementDtos
 
 import (
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
 
 type BodyMeasurementDto struct {

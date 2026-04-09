@@ -135,23 +135,17 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiResponse := &response.ApiResponse[userTypes.User]{
+	apiResponse := &response.ApiResponse[userDtos.UserDto]{
 		Success: true,
-		Data:    user,
+		Data: &userDtos.UserDto{
+			ID:           user.ID,
+			Firstname:    user.Firstname,
+			Lastname:     user.Lastname,
+			EmailAddress: user.EmailAddress,
+			BirthDate:    user.DateBirth,
+		},
 	}
-	userResponse, responseErr := json.Marshal(apiResponse)
-	if responseErr != nil {
-		http.Error(
-			w,
-			"Error trying to serialize a response",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(userResponse)
+	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
 func (h *UserHandler) DeleteById(w http.ResponseWriter, r *http.Request) {

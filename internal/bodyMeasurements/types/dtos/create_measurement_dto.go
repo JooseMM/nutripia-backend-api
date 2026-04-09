@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
+	"github.com/google/uuid"
 )
 
 /* KG and CM */
@@ -38,6 +39,8 @@ type CreateMeasurementDto struct {
 	ThighLow   float64
 	Calf       float64
 	Ankle      float64
+
+	UserId uuid.UUID
 }
 
 func (b *CreateMeasurementDto) Validate() *core.BaseError {

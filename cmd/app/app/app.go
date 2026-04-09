@@ -18,7 +18,7 @@ func NewApp(db *gorm.DB) *App {
 
 	measurementRepo := bodyMeasurement.NewBodyMeasurementRepository(db)
 	measurementService := bodyMeasurement.NewBodyMeasurementService(measurementRepo)
-	measurementHandler := bodyMeasurement.NewBodyMeasurementHandler(measurementService)
+	measurementHandler := bodyMeasurement.NewBodyMeasurementHandler(measurementService, userService)
 
 	return &App{
 		UserHandler:        userHandler,

@@ -13,7 +13,6 @@ import (
 type IBodyMeasurementService interface {
 	Create(
 		dto *bodyMeasurementDtos.CreateMeasurementDto,
-		userId *uuid.UUID,
 		ctx context.Context,
 	) (*uuid.UUID, *core.BaseError)
 	GetById(
@@ -39,11 +38,10 @@ func NewBodyMeasurementService(repo IBodyMeasurementRepository) IBodyMeasurement
 
 func (u *BodyMeasurementService) Create(
 	dto *bodyMeasurementDtos.CreateMeasurementDto,
-	userId *uuid.UUID,
 	ctx context.Context,
 ) (*uuid.UUID, *core.BaseError) {
 	now := time.Now()
-	query, queryErr := u.Repo.GetByDate(ctx, &now, userId)
+	query, queryErr := u.Repo.GetByDate(ctx, &now, &dto.UserId)
 	if queryErr != nil && queryErr.ErrorCode != string(BODY_MEASUREMENT_RECORD_NOT_FOUND) {
 		return nil, queryErr
 	}
@@ -79,7 +77,7 @@ func (u *BodyMeasurementService) Create(
 		Calf:          dto.Calf,
 		Ankle:         dto.Ankle,
 
-		UserId:    *userId,
+		UserId:    dto.UserId,
 		CreatedAt: time.Now(),
 	}
 
