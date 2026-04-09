@@ -5,25 +5,19 @@ import (
 	"time"
 
 	"github.com/JooseMM/nutripia-backend-api/internal/security"
-	userModels "github.com/JooseMM/nutripia-backend-api/internal/users/models"
+	"github.com/JooseMM/nutripia-backend-api/internal/users/types"
+	"github.com/JooseMM/nutripia-backend-api/internal/users/types/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/google/uuid"
 )
 
 type IUserService interface {
-	CreateUser(
-		dto *userModels.CreateUserRequest,
-		role userModels.Role,
-		ctx context.Context,
-	) (*uuid.UUID, *core.BaseError)
-
-	GetById(id *uuid.UUID, ctx context.Context) (*userModels.User, *core.BaseError)
-
+	CreateUser(dto *userDtos.CreateUserRequest, role userTypes.Role, ctx context.Context) (*uuid.UUID, *core.BaseError)
+	GetById(id *uuid.UUID, ctx context.Context) (*userTypes.User, *core.BaseError)
 	DeleteOne(id *uuid.UUID, ctx context.Context) *core.BaseError
-
 	UpdateIdentityInformation(
 		id *uuid.UUID,
-		userDto *userModels.UpdateIdentityRequest,
+		userDto *userDtos.UpdateIdentityRequest,
 		ctx context.Context,
 	) *core.BaseError
 }
@@ -37,8 +31,8 @@ func NewUserService(repo IUserRepository) IUserService {
 }
 
 func (u *UserService) CreateUser(
-	userDto *userModels.CreateUserRequest,
-	role userModels.Role,
+	userDto *userDtos.CreateUserRequest,
+	role userTypes.Role,
 	ctx context.Context,
 ) (*uuid.UUID, *core.BaseError) {
 
@@ -47,7 +41,7 @@ func (u *UserService) CreateUser(
 		return nil, queryEmailErr
 	}
 	if foundEmailOwner != nil {
-		return nil, EmailAlreadyExisting(userDto.EmailAddress)
+		return nil, UserEmailAlreadyExisting(userDto.EmailAddress)
 	}
 
 	hash, hashErr := security.HashPassword(userDto.Password)
@@ -56,20 +50,20 @@ func (u *UserService) CreateUser(
 	}
 
 	now := time.Now()
-	user := &userModels.User{
-		UserIdentity: userModels.UserIdentity{
-			ID:           uuid.New(),
+	user := &userTypes.User{
+		ID: uuid.New(),
+		UserIdentity: userTypes.UserIdentity{
 			Firstname:    userDto.Firstname,
 			Lastname:     userDto.Lastname,
 			EmailAddress: userDto.EmailAddress,
 			DateBirth:    userDto.BirthDate,
 		},
-		AuthenticationInformation: userModels.AuthenticationInformation{
+		AuthenticationInformation: userTypes.AuthenticationInformation{
 			Role:             role,
 			PasswordHash:     hash,
 			IsEmailConfirmed: false,
 		},
-		TrackingInformation: userModels.TrackingInformation{
+		TrackingInformation: userTypes.TrackingInformation{
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
@@ -86,7 +80,7 @@ func (u *UserService) CreateUser(
 func (u *UserService) GetById(
 	id *uuid.UUID,
 	ctx context.Context,
-) (*userModels.User, *core.BaseError) {
+) (*userTypes.User, *core.BaseError) {
 
 	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
 	if unexpectedErr != nil {
@@ -110,7 +104,7 @@ func (u *UserService) DeleteOne(
 
 func (u *UserService) UpdateIdentityInformation(
 	id *uuid.UUID,
-	userDto *userModels.UpdateIdentityRequest,
+	userDto *userDtos.UpdateIdentityRequest,
 	ctx context.Context,
 ) *core.BaseError {
 	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
@@ -123,7 +117,7 @@ func (u *UserService) UpdateIdentityInformation(
 		return queryEmailErr
 	}
 	if foundEmailOwner != nil && foundEmailOwner.ID != *id {
-		return EmailAlreadyExisting(userDto.EmailAddress)
+		return UserEmailAlreadyExisting(userDto.EmailAddress)
 	}
 
 	foundUser.Firstname = userDto.Firstname

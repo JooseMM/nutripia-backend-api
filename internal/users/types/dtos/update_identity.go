@@ -1,4 +1,4 @@
-package userModels
+package userDtos
 
 import (
 	"strings"
@@ -7,15 +7,14 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
-type CreateUserRequest struct {
+type UpdateIdentityRequest struct {
 	Firstname    string    `json:"firstname"`
 	Lastname     string    `json:"lastname"`
 	EmailAddress string    `json:"emailAddress"`
-	Password     string    `json:"password"`
 	BirthDate    time.Time `json:"birthDate"`
 }
 
-func (d *CreateUserRequest) Validate() *core.BaseError {
+func (d *UpdateIdentityRequest) Validate() *core.BaseError {
 	var errorList []string
 
 	d.Firstname = strings.TrimSpace(d.Firstname)
@@ -27,12 +26,6 @@ func (d *CreateUserRequest) Validate() *core.BaseError {
 	emailErr := ValidateEmailAddress(d.EmailAddress)
 	if emailErr != nil {
 		errorList = append(errorList, *emailErr)
-	}
-
-	d.Password = strings.TrimSpace(d.Password)
-	passErr := ValidatePassword(d.Password)
-	if passErr != nil {
-		errorList = append(errorList, *passErr)
 	}
 
 	if len(errorList) == 0 {

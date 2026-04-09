@@ -6,7 +6,8 @@ import (
 
 	"github.com/JooseMM/nutripia-backend-api/cmd/app/app"
 	"github.com/JooseMM/nutripia-backend-api/internal/storage"
-	userModels "github.com/JooseMM/nutripia-backend-api/internal/users/models"
+	userTypes "github.com/JooseMM/nutripia-backend-api/internal/users/types"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
 func main() {
@@ -16,20 +17,24 @@ func main() {
 		return
 	}
 
-	err = db.AutoMigrate(&userModels.User{})
+	err = db.AutoMigrate(&userTypes.User{})
 	if err != nil {
 		fmt.Print("Migration failed: ", err)
 		return
 	}
 
 	mux := http.NewServeMux()
-	protectedMux := app.RecoveryMiddleware(mux)
+	protectedMux := core.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
 
 	mux.HandleFunc("POST /nutritionist", app.UserHandler.Create)
 	mux.HandleFunc("GET /nutritionist/{id}", app.UserHandler.GetById)
 	mux.HandleFunc("PUT /nutritionist/{id}", app.UserHandler.UpdateById)
 	mux.HandleFunc("DELETE /nutritionist/{id}", app.UserHandler.DeleteById)
+
+	mux.HandleFunc("POST /body-measurements", app.MeasurementHandler.Create)
+	mux.HandleFunc("GET /body-measurements/{id}", app.MeasurementHandler.GetById)
+	mux.HandleFunc("DELETE /users/{id}", app.MeasurementHandler.DeleteById)
 
 	fmt.Println("Server starting on :3000...")
 	serveErr := http.ListenAndServe(":3000", protectedMux)
