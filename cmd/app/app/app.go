@@ -29,7 +29,7 @@ func NewApp(db *gorm.DB) *App {
 
 	return &App{
 		ClientHandler:       clients.NewClientHandler(clientService),
-		NutritionistHandler: nutritionist.NewClientHandler(nutritionistService),
+		NutritionistHandler: nutritionist.NewNutritionistHandler(nutritionistService),
 		MeasurementHandler:  measurementHandler,
 	}
 }

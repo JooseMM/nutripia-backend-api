@@ -6,8 +6,9 @@ import (
 
 	"github.com/JooseMM/nutripia-backend-api/cmd/app/app"
 	bodyMeasurementTypes "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types"
+	"github.com/JooseMM/nutripia-backend-api/internal/clients/types"
+	nutritionistTypes "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types"
 	"github.com/JooseMM/nutripia-backend-api/internal/storage"
-	userTypes "github.com/JooseMM/nutripia-backend-api/internal/clients/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
@@ -18,7 +19,8 @@ func main() {
 		return
 	}
 
-	err = db.AutoMigrate(&userTypes.Client{})
+	err = db.AutoMigrate(&clientTypes.Client{})
+	err = db.AutoMigrate(&nutritionistTypes.Nutritionist{})
 	err = db.AutoMigrate(&bodyMeasurementTypes.BodyMeasurement{})
 
 	if err != nil {
@@ -30,12 +32,15 @@ func main() {
 	protectedMux := core.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
 
+	mux.HandleFunc("GET /nutritionist/{id}/clients", app.NutritionistHandler.GetNutritionistById)
+	mux.HandleFunc("GET /nutritionist/{id}", app.NutritionistHandler.GetNutritionistById)
+	mux.HandleFunc("PUT /nutritionist/{id}", app.NutritionistHandler.UpdateNutritionistById)
+	mux.HandleFunc("DELETE /nutritionist/{id}", app.NutritionistHandler.DeleteNutritionistById)
 
-	mux.HandleFunc("GET /nutritionist/{id}", app.UserHandler.GetById)
-	mux.HandleFunc("PUT /nutritionist/{id}", app.UserHandler.UpdateById)
-	mux.HandleFunc("DELETE /nutritionist/{id}", app.UserHandler.DeleteById)
-
-	mux.HandleFunc("POST /nutritionist/client", app.UserHandler.Create)
+	mux.HandleFunc("POST /nutritionist/client", app.ClientHandler.CreateClient)
+	mux.HandleFunc("PUT /nutritionist/client", app.ClientHandler.UpdateClientById)
+	mux.HandleFunc("GET /client/{id}", app.ClientHandler.GetClientById)
+	mux.HandleFunc("DELETE /nutritionist/client/{id}", app.ClientHandler.DeleteClientById)
 
 	mux.HandleFunc("POST /body-measurements", app.MeasurementHandler.Create)
 	mux.HandleFunc("GET /body-measurements/{id}", app.MeasurementHandler.GetById)

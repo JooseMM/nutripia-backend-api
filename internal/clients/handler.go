@@ -14,6 +14,7 @@ import (
 type IClientHandler interface {
 	CreateClient(w http.ResponseWriter, r *http.Request)
 	GetClientById(w http.ResponseWriter, r *http.Request)
+	GetClientByNutritionist(w http.ResponseWriter, r *http.Request)
 	DeleteClientById(w http.ResponseWriter, r *http.Request)
 	UpdateClientById(w http.ResponseWriter, r *http.Request)
 }
@@ -54,7 +55,7 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, failure := h.service.CreateUser(&dto, userTypes.CLIENT, r.Context())
+	id, failure := h.service.CreateUser(&dto, r.Context())
 	if failure != nil {
 		errJson, err := json.Marshal(failure)
 		if err != nil {
@@ -90,6 +91,38 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(responseJson)
+}
+
+func (h *ClientHandler) GetClientByNutritionist(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	rawId := r.PathValue("id")
+
+	id, parseErr := uuid.Parse(rawId)
+	if parseErr != nil {
+		responseErr := core.ValidationError(
+			[]string{"The identifier provided in the URL path is not a valid UUID format."},
+		)
+		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+		return
+	}
+
+	user, err := h.service.GetById(&id, r.Context())
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+
+	apiResponse := &response.ApiResponse[clientDtos.ClientDto]{
+		Success: true,
+		Data: &clientDtos.ClientDto{
+			ID:           user.ID,
+			Firstname:    user.Firstname,
+			Lastname:     user.Lastname,
+			EmailAddress: user.EmailAddress,
+			BirthDate:    user.DateBirth,
+		},
+	}
+	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
 func (h *ClientHandler) GetClientById(w http.ResponseWriter, r *http.Request) {
@@ -196,7 +229,7 @@ func (h *ClientHandler) UpdateClientById(w http.ResponseWriter, r *http.Request)
 	defer r.Body.Close()
 
 	rawId := r.PathValue("id")
-	var dto nutritionistDtos.UpdateClientRequest
+	var dto clientDtos.UpdateClientRequest
 
 	id, parseErr := uuid.Parse(rawId)
 	if parseErr != nil {

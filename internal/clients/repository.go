@@ -10,14 +10,20 @@ import (
 	"gorm.io/gorm"
 )
 
-type postgresRepository struct {
+type ClienRepository struct {
 	db *gorm.DB
 }
 
 type IClientRepository interface {
-	GetAll(ctx context.Context) ([]*clientTypes.Client, *core.BaseError)
+	GetAllByNutritionist(
+		userId *uuid.UUID,
+		ctx context.Context,
+	) ([]*clientTypes.Client, *core.BaseError)
 	GetById(ctx context.Context, id *uuid.UUID) (*clientTypes.Client, *core.BaseError)
-	GetByEmailAddress(ctx context.Context, emalAddress string) (*clientTypes.Client, *core.BaseError)
+	GetByEmailAddress(
+		ctx context.Context,
+		emalAddress string,
+	) (*clientTypes.Client, *core.BaseError)
 
 	Create(ctx context.Context, u *clientTypes.Client) *core.BaseError
 	Update(ctx context.Context, u *clientTypes.Client) *core.BaseError
@@ -25,13 +31,16 @@ type IClientRepository interface {
 }
 
 func NewClientRepository(db *gorm.DB) IClientRepository {
-	return &postgresRepository{db}
+	return &ClienRepository{db}
 }
 
-func (r *postgresRepository) GetAll(ctx context.Context) ([]*clientTypes.Client, *core.BaseError) {
+func (r *ClienRepository) GetAllByNutritionist(
+	userId *uuid.UUID,
+	ctx context.Context,
+) ([]*clientTypes.Client, *core.BaseError) {
 	var list []*clientTypes.Client
 
-	result := r.db.WithContext(ctx).Find(&list)
+	result := r.db.WithContext(ctx).Where("nutritionist_owner_id = ?", userId).First(&list)
 	if result.Error != nil {
 		return nil, core.UnexpectedError(result.Error.Error())
 	}
@@ -39,7 +48,7 @@ func (r *postgresRepository) GetAll(ctx context.Context) ([]*clientTypes.Client,
 	return list, nil
 }
 
-func (r *postgresRepository) GetById(
+func (r *ClienRepository) GetById(
 	ctx context.Context,
 	id *uuid.UUID,
 ) (*clientTypes.Client, *core.BaseError) {
@@ -56,7 +65,7 @@ func (r *postgresRepository) GetById(
 	return &user, nil
 }
 
-func (r *postgresRepository) Create(ctx context.Context, u *clientTypes.Client) *core.BaseError {
+func (r *ClienRepository) Create(ctx context.Context, u *clientTypes.Client) *core.BaseError {
 	result := r.db.WithContext(ctx).Create(u)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
@@ -64,7 +73,7 @@ func (r *postgresRepository) Create(ctx context.Context, u *clientTypes.Client) 
 	return nil
 }
 
-func (r *postgresRepository) Update(ctx context.Context, u *clientTypes.Client) *core.BaseError {
+func (r *ClienRepository) Update(ctx context.Context, u *clientTypes.Client) *core.BaseError {
 	result := r.db.WithContext(ctx).Save(u)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
@@ -72,7 +81,7 @@ func (r *postgresRepository) Update(ctx context.Context, u *clientTypes.Client) 
 	return nil
 }
 
-func (r *postgresRepository) Delete(ctx context.Context, id *uuid.UUID) *core.BaseError {
+func (r *ClienRepository) Delete(ctx context.Context, id *uuid.UUID) *core.BaseError {
 	result := r.db.WithContext(ctx).Delete(&clientTypes.Client{}, id)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
@@ -84,7 +93,7 @@ func (r *postgresRepository) Delete(ctx context.Context, id *uuid.UUID) *core.Ba
 	return nil
 }
 
-func (r *postgresRepository) GetByEmailAddress(
+func (r *ClienRepository) GetByEmailAddress(
 	ctx context.Context,
 	emailAddress string,
 ) (*clientTypes.Client, *core.BaseError) {

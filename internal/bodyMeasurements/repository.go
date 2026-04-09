@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type postgresRepository struct {
+type BodyMeasurementRepository struct {
 	db *gorm.DB
 }
 
@@ -40,10 +40,10 @@ type IBodyMeasurementRepository interface {
 }
 
 func NewBodyMeasurementRepository(db *gorm.DB) IBodyMeasurementRepository {
-	return &postgresRepository{db}
+	return &BodyMeasurementRepository{db}
 }
 
-func (r *postgresRepository) GetAllByUser(
+func (r *BodyMeasurementRepository) GetAllByUser(
 	ctx context.Context,
 	userID uuid.UUID,
 ) ([]*bodyMeasurementTypes.BodyMeasurement, *core.BaseError) {
@@ -57,7 +57,7 @@ func (r *postgresRepository) GetAllByUser(
 	return list, nil
 }
 
-func (r *postgresRepository) GetByDate(
+func (r *BodyMeasurementRepository) GetByDate(
 	ctx context.Context,
 	date *time.Time,
 	userId *uuid.UUID,
@@ -75,7 +75,7 @@ func (r *postgresRepository) GetByDate(
 	return &measurement, nil
 }
 
-func (r *postgresRepository) GetByRange(
+func (r *BodyMeasurementRepository) GetByRange(
 	ctx context.Context,
 	start *time.Time,
 	end *time.Time,
@@ -95,7 +95,7 @@ func (r *postgresRepository) GetByRange(
 	return measurement, nil
 }
 
-func (r *postgresRepository) GetById(
+func (r *BodyMeasurementRepository) GetById(
 	ctx context.Context,
 	id *uuid.UUID,
 ) (*bodyMeasurementTypes.BodyMeasurement, *core.BaseError) {
@@ -112,7 +112,7 @@ func (r *postgresRepository) GetById(
 	return &measurement, nil
 }
 
-func (r *postgresRepository) Create(
+func (r *BodyMeasurementRepository) Create(
 	ctx context.Context,
 	measurement *bodyMeasurementTypes.BodyMeasurement,
 ) *core.BaseError {
@@ -123,7 +123,7 @@ func (r *postgresRepository) Create(
 	return nil
 }
 
-func (r *postgresRepository) Delete(ctx context.Context, id *uuid.UUID) *core.BaseError {
+func (r *BodyMeasurementRepository) Delete(ctx context.Context, id *uuid.UUID) *core.BaseError {
 	result := r.db.WithContext(ctx).Delete(&bodyMeasurementTypes.BodyMeasurement{}, id)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())

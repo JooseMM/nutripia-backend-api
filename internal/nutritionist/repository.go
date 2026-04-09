@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type postgresRepository struct {
+type NutritonistRepository struct {
 	db *gorm.DB
 }
 
@@ -28,10 +28,10 @@ type INutritionistRepository interface {
 }
 
 func NewNutritionistRepository(db *gorm.DB) INutritionistRepository {
-	return &postgresRepository{db}
+	return &NutritonistRepository{db}
 }
 
-func (r *postgresRepository) GetAll(
+func (r *NutritonistRepository) GetAll(
 	ctx context.Context,
 ) ([]*nutritionistTypes.Nutritionist, *core.BaseError) {
 	var list []*nutritionistTypes.Nutritionist
@@ -44,7 +44,7 @@ func (r *postgresRepository) GetAll(
 	return list, nil
 }
 
-func (r *postgresRepository) GetById(
+func (r *NutritonistRepository) GetById(
 	ctx context.Context,
 	id *uuid.UUID,
 ) (*nutritionistTypes.Nutritionist, *core.BaseError) {
@@ -61,7 +61,7 @@ func (r *postgresRepository) GetById(
 	return &user, nil
 }
 
-func (r *postgresRepository) Create(
+func (r *NutritonistRepository) Create(
 	ctx context.Context,
 	u *nutritionistTypes.Nutritionist,
 ) *core.BaseError {
@@ -72,7 +72,7 @@ func (r *postgresRepository) Create(
 	return nil
 }
 
-func (r *postgresRepository) Update(
+func (r *NutritonistRepository) Update(
 	ctx context.Context,
 	u *nutritionistTypes.Nutritionist,
 ) *core.BaseError {
@@ -83,7 +83,7 @@ func (r *postgresRepository) Update(
 	return nil
 }
 
-func (r *postgresRepository) Delete(ctx context.Context, id *uuid.UUID) *core.BaseError {
+func (r *NutritonistRepository) Delete(ctx context.Context, id *uuid.UUID) *core.BaseError {
 	result := r.db.WithContext(ctx).Delete(&nutritionistTypes.Nutritionist{}, id)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
@@ -95,7 +95,7 @@ func (r *postgresRepository) Delete(ctx context.Context, id *uuid.UUID) *core.Ba
 	return nil
 }
 
-func (r *postgresRepository) GetByEmailAddress(
+func (r *NutritonistRepository) GetByEmailAddress(
 	ctx context.Context,
 	emailAddress string,
 ) (*nutritionistTypes.Nutritionist, *core.BaseError) {

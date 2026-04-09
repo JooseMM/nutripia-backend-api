@@ -16,6 +16,10 @@ type IClientService interface {
 		ctx context.Context,
 	) (*uuid.UUID, *core.BaseError)
 	GetById(id *uuid.UUID, ctx context.Context) (*clientTypes.Client, *core.BaseError)
+	GetByNutritionist(
+		userId *uuid.UUID,
+		ctx context.Context,
+	) ([]*clientTypes.Client, *core.BaseError)
 	DeleteOne(id *uuid.UUID, ctx context.Context) *core.BaseError
 	UpdateIdentityInformation(
 		id *uuid.UUID,
@@ -79,6 +83,18 @@ func (u *UserService) GetById(
 	}
 
 	return foundUser, nil
+}
+
+func (u *UserService) GetByNutritionist(
+	userId *uuid.UUID,
+	ctx context.Context,
+) ([]*clientTypes.Client, *core.BaseError) {
+	clientList, unexpectedErr := u.Repo.GetAllByNutritionist(userId, ctx)
+	if unexpectedErr != nil {
+		return nil, unexpectedErr
+	}
+
+	return clientList, nil
 }
 
 func (u *UserService) DeleteOne(

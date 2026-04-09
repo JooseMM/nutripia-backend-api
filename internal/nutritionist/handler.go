@@ -12,50 +12,20 @@ import (
 )
 
 type INutritionistHandler interface {
-	CreateNutritionist(w http.ResponseWriter, r *http.Request)
-	GetClientById(w http.ResponseWriter, r *http.Request)
-	UpdateClientById(w http.ResponseWriter, r *http.Request)
-	DeleteClientById(w http.ResponseWriter, r *http.Request)
+	GetNutritionistById(w http.ResponseWriter, r *http.Request)
+	UpdateNutritionistById(w http.ResponseWriter, r *http.Request)
+	DeleteNutritionistById(w http.ResponseWriter, r *http.Request)
 }
 
 type NutriotionistHandler struct {
 	service INutritionistService
 }
 
-func NewClientHandler(service INutritionistService) INutritionistHandler {
+func NewNutritionistHandler(service INutritionistService) INutritionistHandler {
 	return &NutriotionistHandler{service}
 }
 
-func (h *NutriotionistHandler) CreateNutritionist(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var dto nutritionistDtos.CreateNutritionistRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		http.Error(w, "Bad request: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if err := dto.Validate(); err != nil {
-		response.WriteJSON(w, err.StatusCode, err)
-		return
-	}
-
-	id, failure := h.service.CreateNutritionist(&dto, r.Context())
-	if failure != nil {
-		response.WriteJSON(w, failure.StatusCode, failure)
-		return
-	}
-
-	idStr := id.String()
-	responseJson := &response.ApiResponse[string]{
-		Success: true,
-		Data:    &idStr,
-	}
-
-	response.WriteJSON(w, http.StatusCreated, responseJson)
-}
-
-func (h *NutriotionistHandler) GetClientById(w http.ResponseWriter, r *http.Request) {
+func (h *NutriotionistHandler) GetNutritionistById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	rawId := r.PathValue("id")
 
@@ -87,7 +57,7 @@ func (h *NutriotionistHandler) GetClientById(w http.ResponseWriter, r *http.Requ
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *NutriotionistHandler) UpdateClientById(w http.ResponseWriter, r *http.Request) {
+func (h *NutriotionistHandler) UpdateNutritionistById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	rawId := r.PathValue("id")
@@ -121,7 +91,7 @@ func (h *NutriotionistHandler) UpdateClientById(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *NutriotionistHandler) DeleteClientById(w http.ResponseWriter, r *http.Request) {
+func (h *NutriotionistHandler) DeleteNutritionistById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	rawId := r.PathValue("id")
 
