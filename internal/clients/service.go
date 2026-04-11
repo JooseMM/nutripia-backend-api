@@ -13,6 +13,7 @@ import (
 type IClientService interface {
 	CreateUser(
 		dto *clientDtos.CreateClientRequest,
+		nutritionistOwnerId *uuid.UUID,
 		ctx context.Context,
 	) (*uuid.UUID, *core.BaseError)
 	GetById(id *uuid.UUID, ctx context.Context) (*clientTypes.Client, *core.BaseError)
@@ -38,6 +39,7 @@ func NewClientService(repo IClientRepository) IClientService {
 
 func (u *UserService) CreateUser(
 	userDto *clientDtos.CreateClientRequest,
+	nutritionistOwnerId *uuid.UUID,
 	ctx context.Context,
 ) (*uuid.UUID, *core.BaseError) {
 
@@ -53,10 +55,11 @@ func (u *UserService) CreateUser(
 	user := &clientTypes.Client{
 		ID: uuid.New(),
 		ClientIdentity: clientTypes.ClientIdentity{
-			Firstname:    userDto.Firstname,
-			Lastname:     userDto.Lastname,
-			EmailAddress: userDto.EmailAddress,
-			DateBirth:    userDto.BirthDate,
+			Firstname:           userDto.Firstname,
+			Lastname:            userDto.Lastname,
+			EmailAddress:        userDto.EmailAddress,
+			DateBirth:           userDto.BirthDate,
+			NutritionistOwnerId: *nutritionistOwnerId,
 		},
 		TrackingInformation: clientTypes.TrackingInformation{
 			CreatedAt: now,
@@ -92,6 +95,9 @@ func (u *UserService) GetByNutritionist(
 	clientList, unexpectedErr := u.Repo.GetAllByNutritionist(userId, ctx)
 	if unexpectedErr != nil {
 		return nil, unexpectedErr
+	}
+	if clientList == nil {
+		return []*clientTypes.Client{}, nil
 	}
 
 	return clientList, nil

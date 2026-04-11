@@ -11,6 +11,9 @@ import (
 	"github.com/google/uuid"
 )
 
+const UserIdKey = "userId"
+const RoleIdKey = "roleId"
+
 type IClientHandler interface {
 	CreateClient(w http.ResponseWriter, r *http.Request)
 	GetClientById(w http.ResponseWriter, r *http.Request)
@@ -43,13 +46,20 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, failure := h.service.CreateUser(&dto, r.Context())
+	rawId := r.Context().Value(UserIdKey)
+	userId, ok := rawId.(uuid.UUID)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	createdId, failure := h.service.CreateUser(&dto, &userId, r.Context())
 	if failure != nil {
 		response.WriteJSON(w, failure.StatusCode, failure)
 		return
 	}
 
-	idStr := id.String()
+	idStr := createdId.String()
 	apiResponse := &response.ApiResponse[string]{
 		Success: true,
 		Data:    &idStr,
@@ -59,32 +69,34 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 
 func (h *ClientHandler) GetClientByNutritionist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	rawId := r.PathValue("id")
 
-	id, parseErr := uuid.Parse(rawId)
-	if parseErr != nil {
-		responseErr := core.ValidationError(
-			[]string{"The identifier provided in the URL path is not a valid UUID format."},
-		)
-		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+	rawId := r.Context().Value(UserIdKey)
+	userId, ok := rawId.(uuid.UUID)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	user, err := h.service.GetById(&id, r.Context())
+	userList, err := h.service.GetByNutritionist(&userId, r.Context())
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	apiResponse := &response.ApiResponse[clientDtos.ClientDto]{
+	dtoList := []*clientDtos.ClientDto{}
+	for _, v := range userList {
+		dtoList = append(dtoList, &clientDtos.ClientDto{
+			ID:           v.ID,
+			Firstname:    v.Firstname,
+			Lastname:     v.Lastname,
+			EmailAddress: v.EmailAddress,
+			BirthDate:    v.DateBirth,
+		})
+	}
+
+	apiResponse := &response.ApiResponse[[]*clientDtos.ClientDto]{
 		Success: true,
-		Data: &clientDtos.ClientDto{
-			ID:           user.ID,
-			Firstname:    user.Firstname,
-			Lastname:     user.Lastname,
-			EmailAddress: user.EmailAddress,
-			BirthDate:    user.DateBirth,
-		},
+		Data:    &dtoList,
 	}
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }

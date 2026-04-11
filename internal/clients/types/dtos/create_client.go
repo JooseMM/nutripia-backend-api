@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
-	"github.com/google/uuid"
 )
 
 type CreateClientRequest struct {
@@ -13,7 +12,6 @@ type CreateClientRequest struct {
 	Lastname            string    `json:"lastname"`
 	EmailAddress        string    `json:"emailAddress"`
 	BirthDate           time.Time `json:"birthDate"`
-	NutritionistOwnerId uuid.UUID `json:"nutritionistOwnerId"`
 }
 
 func (d *CreateClientRequest) Validate() *core.BaseError {

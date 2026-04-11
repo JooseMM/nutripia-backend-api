@@ -20,12 +20,22 @@ func main() {
 		return
 	}
 
-	err = db.AutoMigrate(&clientTypes.Client{})
-	err = db.AutoMigrate(&nutritionistTypes.Nutritionist{})
-	err = db.AutoMigrate(&bodyMeasurementTypes.BodyMeasurement{})
-	err = db.AutoMigrate(&sessionTypes.Session{})
+	if err = db.AutoMigrate(&clientTypes.Client{}); err != nil {
+		fmt.Print("Migration failed: ", err)
+		return
+	}
 
-	if err != nil {
+	if err = db.AutoMigrate(&nutritionistTypes.Nutritionist{}); err != nil {
+		fmt.Print("Migration failed: ", err)
+		return
+	}
+
+	if err = db.AutoMigrate(&bodyMeasurementTypes.BodyMeasurement{}); err != nil {
+		fmt.Print("Migration failed: ", err)
+		return
+	}
+
+	if err = db.AutoMigrate(&sessionTypes.Session{}); err != nil {
 		fmt.Print("Migration failed: ", err)
 		return
 	}
@@ -52,6 +62,12 @@ func main() {
 		"POST /nutritionist/client",
 		app.AuthorizationMiddlewares.NutritionistOnly(
 			app.ClientHandler.CreateClient,
+		),
+	)
+
+	mux.Handle("GET /clients/",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.ClientHandler.GetClientByNutritionist,
 		),
 	)
 

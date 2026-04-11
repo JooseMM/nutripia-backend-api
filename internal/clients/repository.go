@@ -3,6 +3,7 @@ package clients
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/JooseMM/nutripia-backend-api/internal/clients/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
@@ -40,8 +41,9 @@ func (r *ClienRepository) GetAllByNutritionist(
 ) ([]*clientTypes.Client, *core.BaseError) {
 	var list []*clientTypes.Client
 
-	result := r.db.WithContext(ctx).Where("nutritionist_owner_id = ?", userId).First(&list)
+	result := r.db.WithContext(ctx).Where("nutritionist_owner_id = ?", userId).Find(&list)
 	if result.Error != nil {
+		fmt.Printf("error: %s", result.Error)
 		return nil, core.UnexpectedError(result.Error.Error())
 	}
 
