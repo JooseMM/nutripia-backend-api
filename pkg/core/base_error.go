@@ -2,6 +2,13 @@ package core
 
 import "net/http"
 
+type ApiError string
+
+const (
+	UNEXPECTED_ERROR ApiError = "UNEXPECTED_ERROR"
+	VALIDATION_ERROR ApiError = "VALIDATION_ERROR"
+)
+
 type BaseError struct {
 	StatusCode  uint16   `json:"statusCode"`
 	ErrorCode   string   `json:"errorCode"`
@@ -12,7 +19,7 @@ type BaseError struct {
 func UnexpectedError(description string) *BaseError {
 	return &BaseError{
 		StatusCode:  http.StatusInternalServerError,
-		ErrorCode:   "UNEXPECTED_ERROR",
+		ErrorCode:   string(UNEXPECTED_ERROR),
 		Description: description,
 		Details:     nil,
 	}
@@ -21,7 +28,7 @@ func UnexpectedError(description string) *BaseError {
 func ValidationError(detailList []string) *BaseError {
 	return &BaseError{
 		StatusCode:  http.StatusUnprocessableEntity,
-		ErrorCode:   "VALIDATION_ERROR",
+		ErrorCode:   string(VALIDATION_ERROR),
 		Description: "The request body contains invalid data or failed business logic validation.",
 		Details:     detailList,
 	}

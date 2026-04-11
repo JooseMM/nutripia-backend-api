@@ -34,24 +34,63 @@ func main() {
 	protectedMux := core.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
 
+	/* TODO: admin routes
+	 	mux.HandleFunc("DELETE /nutritionist/{id}", app.NutritionistHandler.DeleteNutritionistById)
+		mux.HandleFunc("GET /nutritionist/{id}", app.NutritionistHandler.GetNutritionistById)
+	*/
+
 	mux.HandleFunc("POST /nutritionist/register", app.AuthenticationHandler.RegisterNutritionist)
 	mux.HandleFunc("POST /nutritionist/login", app.AuthenticationHandler.LoginNutritionist)
 
-	mux.HandleFunc("GET /nutritionist/{id}/clients", app.NutritionistHandler.GetNutritionistById)
-	mux.HandleFunc("GET /nutritionist/{id}", app.NutritionistHandler.GetNutritionistById)
-	mux.HandleFunc("PUT /nutritionist/{id}", app.NutritionistHandler.UpdateNutritionistById)
-	mux.HandleFunc("DELETE /nutritionist/{id}", app.NutritionistHandler.DeleteNutritionistById)
+	mux.Handle("PUT /nutritionist/{id}",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.NutritionistHandler.UpdateNutritionistById,
+		),
+	)
 
-	mux.HandleFunc("POST /nutritionist/client", app.ClientHandler.CreateClient)
-	mux.HandleFunc("PUT /nutritionist/client", app.ClientHandler.UpdateClientById)
-	mux.HandleFunc("GET /client/{id}", app.ClientHandler.GetClientById)
-	mux.HandleFunc("DELETE /nutritionist/client/{id}", app.ClientHandler.DeleteClientById)
+	mux.Handle(
+		"POST /nutritionist/client",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.ClientHandler.CreateClient,
+		),
+	)
 
-	mux.HandleFunc("POST /body-measurements", app.MeasurementHandler.Create)
-	mux.HandleFunc("GET /body-measurements/{id}", app.MeasurementHandler.GetById)
-	mux.HandleFunc("DELETE /body-measurements/{id}", app.MeasurementHandler.DeleteById)
+	mux.Handle("GET /client/{id}",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.ClientHandler.GetClientById,
+		),
+	)
 
-	fmt.Println("Server starting on :3000...")
+	mux.Handle("DELETE /nutritionist/client/{id}",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.ClientHandler.DeleteClientById,
+		),
+	)
+
+	mux.Handle("PUT /nutritionist/client",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.ClientHandler.UpdateClientById,
+		),
+	)
+
+	mux.Handle("POST /body-measurements",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.MeasurementHandler.Create,
+		),
+	)
+	mux.Handle("GET /body-measurements/{id}",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.MeasurementHandler.GetById,
+		),
+	)
+
+	mux.Handle("DELETE /body-measurements/{id}",
+		app.AuthorizationMiddlewares.NutritionistOnly(
+			app.MeasurementHandler.DeleteById,
+		),
+	)
+
+	fmt.Println("Server starting on port:3000")
 	serveErr := http.ListenAndServe(":3000", protectedMux)
 	if serveErr != nil {
 		fmt.Printf("Error starting server: %s\n", serveErr)

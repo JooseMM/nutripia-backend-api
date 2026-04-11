@@ -33,64 +33,28 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
-		http.Error(w, "Bad request: "+err.Error(), http.StatusBadRequest)
+		responseErr := core.ValidationError([]string{err.Error()})
+		response.WriteJSON(w, responseErr.StatusCode, responseErr)
 		return
 	}
 
-	validationErr := dto.Validate()
-	if validationErr != nil {
-		json, jsonErr := json.Marshal(validationErr)
-		if jsonErr != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
+	if validationErr := dto.Validate(); validationErr != nil {
+		response.WriteJSON(w, validationErr.StatusCode, validationErr)
 		return
 	}
 
 	id, failure := h.service.CreateUser(&dto, r.Context())
 	if failure != nil {
-		errJson, err := json.Marshal(failure)
-		if err != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(int(failure.StatusCode))
-		w.Write(errJson)
+		response.WriteJSON(w, failure.StatusCode, failure)
 		return
 	}
 
 	idStr := id.String()
-	response := &response.ApiResponse[string]{
+	apiResponse := &response.ApiResponse[string]{
 		Success: true,
 		Data:    &idStr,
 	}
-	responseJson, responseErr := json.Marshal(response)
-	if responseErr != nil {
-		http.Error(
-			w,
-			"Error trying to serialize a response",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(responseJson)
+	response.WriteJSON(w, http.StatusCreated, apiResponse)
 }
 
 func (h *ClientHandler) GetClientByNutritionist(w http.ResponseWriter, r *http.Request) {
