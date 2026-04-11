@@ -7,7 +7,9 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist"
 	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types"
 	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types/dtos"
+	authenticationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types"
 	authenticationDtos "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types/dtos"
+	"github.com/JooseMM/nutripia-backend-api/internal/security/session"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/google/uuid"
 )
@@ -17,20 +19,26 @@ type IAuthenticationService interface {
 		dto *nutritionistDtos.CreateNutritionistRequest,
 		ctx context.Context,
 	) (*uuid.UUID, *core.BaseError)
-	LoginNutritionist(
+	Login(
 		dto *authenticationDtos.LoginRequest,
+		role *authenticationTypes.UserRoles,
 		ctx context.Context,
 	) (*string, *core.BaseError)
 }
 
 type AuthenticationService struct {
 	NutritionistRepo nutritionist.INutritionistRepository
+	SessionService   session.ISessionService
 }
 
 func NewAuthenticationService(
 	nutritionistRepo nutritionist.INutritionistRepository,
+	sessionService session.ISessionService,
 ) IAuthenticationService {
-	return &AuthenticationService{nutritionistRepo}
+	return &AuthenticationService{
+		nutritionistRepo,
+		sessionService,
+	}
 }
 
 func (s *AuthenticationService) RegisterNutritionist(
@@ -81,11 +89,28 @@ func (s *AuthenticationService) RegisterNutritionist(
 	return &user.ID, nil
 }
 
-func (s *AuthenticationService) LoginNutritionist(
+func (s *AuthenticationService) Login(
 	dto *authenticationDtos.LoginRequest,
+	role *authenticationTypes.UserRoles,
 	ctx context.Context,
 ) (*string, *core.BaseError) {
+	user, userErr := s.NutritionistRepo.GetByEmailAddress(ctx, dto.EmailAddress)
+	if userErr != nil {
+		return nil, WrongCredentials()
+	}
 
-	var sessionToken = ""
-	return &sessionToken, nil
+	// if !user.IsEmailConfirmed {
+	// 	return nil, EmailNotConfirmed()
+	// }
+
+	if !VerifyPassword(dto.Password, user.PasswordHash) {
+		return nil, WrongCredentials()
+	}
+
+	token, tokenErr := s.SessionService.CreateSession(&user.ID, role, ctx)
+	if tokenErr != nil {
+		return nil, tokenErr
+	}
+
+	return token, nil
 }

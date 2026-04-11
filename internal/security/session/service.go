@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"time"
 
+	authenticationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types"
 	sessionTypes "github.com/JooseMM/nutripia-backend-api/internal/security/session/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/google/uuid"
@@ -18,7 +19,11 @@ type SessionService struct {
 }
 
 type ISessionService interface {
-	CreateSession(userId *uuid.UUID, ctx context.Context) (*string, *core.BaseError)
+	CreateSession(
+		userId *uuid.UUID,
+		role *authenticationTypes.UserRoles,
+		ctx context.Context,
+	) (*string, *core.BaseError)
 	VerifySession(sessionHash *string, ctx context.Context) (*sessionTypes.Session, *core.BaseError)
 	DeleteSession(sessionId *uuid.UUID, ctx context.Context) *core.BaseError
 	DeleteAllSessionByUserId(userId *uuid.UUID, ctx context.Context) *core.BaseError
@@ -30,6 +35,7 @@ func NewSessionService(repo ISessionRepository) ISessionService {
 
 func (s *SessionService) CreateSession(
 	userId *uuid.UUID,
+	role *authenticationTypes.UserRoles,
 	ctx context.Context,
 ) (*string, *core.BaseError) {
 	token, tokenErr := s.generateToken()
@@ -41,6 +47,7 @@ func (s *SessionService) CreateSession(
 	session := &sessionTypes.Session{
 		ID:          uuid.New(),
 		SessionHash: s.hashToken(token),
+		Role:        *role,
 		UserId:      *userId,
 		ExpiredAt:   now.Add(72 * time.Hour),
 	}

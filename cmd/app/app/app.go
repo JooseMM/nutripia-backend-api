@@ -4,13 +4,16 @@ import (
 	bodyMeasurement "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements"
 	"github.com/JooseMM/nutripia-backend-api/internal/clients"
 	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist"
+	"github.com/JooseMM/nutripia-backend-api/internal/security/authentication"
+	"github.com/JooseMM/nutripia-backend-api/internal/security/session"
 	"gorm.io/gorm"
 )
 
 type App struct {
-	NutritionistHandler nutritionist.INutritionistHandler
-	ClientHandler       clients.IClientHandler
-	MeasurementHandler  bodyMeasurement.IBodyMeasurementHandler
+	NutritionistHandler   nutritionist.INutritionistHandler
+	ClientHandler         clients.IClientHandler
+	MeasurementHandler    bodyMeasurement.IBodyMeasurementHandler
+	AuthenticationHandler authentication.IAuthenticationHandler
 }
 
 func NewApp(db *gorm.DB) *App {
@@ -27,9 +30,18 @@ func NewApp(db *gorm.DB) *App {
 		clientService,
 	)
 
+	sessionRepo := session.NewSessionRepository(db)
+	sessionService := session.NewSessionService(sessionRepo)
+	authenticationService := authentication.NewAuthenticationService(
+		nutritionistRepo,
+		sessionService,
+	)
+	authenticationHandler := authentication.NewAuthenticationHandler(authenticationService)
+
 	return &App{
-		ClientHandler:       clients.NewClientHandler(clientService),
-		NutritionistHandler: nutritionist.NewNutritionistHandler(nutritionistService),
-		MeasurementHandler:  measurementHandler,
+		ClientHandler:         clients.NewClientHandler(clientService),
+		NutritionistHandler:   nutritionist.NewNutritionistHandler(nutritionistService),
+		MeasurementHandler:    measurementHandler,
+		AuthenticationHandler: authenticationHandler,
 	}
 }

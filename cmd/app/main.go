@@ -8,6 +8,7 @@ import (
 	bodyMeasurementTypes "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types"
 	"github.com/JooseMM/nutripia-backend-api/internal/clients/types"
 	nutritionistTypes "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types"
+	sessionTypes "github.com/JooseMM/nutripia-backend-api/internal/security/session/types"
 	"github.com/JooseMM/nutripia-backend-api/internal/storage"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
@@ -22,6 +23,7 @@ func main() {
 	err = db.AutoMigrate(&clientTypes.Client{})
 	err = db.AutoMigrate(&nutritionistTypes.Nutritionist{})
 	err = db.AutoMigrate(&bodyMeasurementTypes.BodyMeasurement{})
+	err = db.AutoMigrate(&sessionTypes.Session{})
 
 	if err != nil {
 		fmt.Print("Migration failed: ", err)
@@ -31,6 +33,9 @@ func main() {
 	mux := http.NewServeMux()
 	protectedMux := core.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
+
+	mux.HandleFunc("POST /nutritionist/register", app.AuthenticationHandler.RegisterNutritionist)
+	mux.HandleFunc("POST /nutritionist/login", app.AuthenticationHandler.LoginNutritionist)
 
 	mux.HandleFunc("GET /nutritionist/{id}/clients", app.NutritionistHandler.GetNutritionistById)
 	mux.HandleFunc("GET /nutritionist/{id}", app.NutritionistHandler.GetNutritionistById)
