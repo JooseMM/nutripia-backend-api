@@ -15,16 +15,16 @@ type NutritonistRepository struct {
 }
 
 type INutritionistRepository interface {
-	GetAll(ctx context.Context) ([]*nutritionistTypes.Nutritionist, *core.BaseError)
-	GetById(ctx context.Context, id *uuid.UUID) (*nutritionistTypes.Nutritionist, *core.BaseError)
+	GetAll(ctx *context.Context) ([]*nutritionistTypes.Nutritionist, *core.BaseError)
+	GetById(ctx *context.Context, id *uuid.UUID) (*nutritionistTypes.Nutritionist, *core.BaseError)
 	GetByEmailAddress(
-		ctx context.Context,
+		ctx *context.Context,
 		emalAddress string,
 	) (*nutritionistTypes.Nutritionist, *core.BaseError)
 
-	Create(ctx context.Context, u *nutritionistTypes.Nutritionist) *core.BaseError
-	Update(ctx context.Context, u *nutritionistTypes.Nutritionist) *core.BaseError
-	Delete(ctx context.Context, id *uuid.UUID) *core.BaseError
+	Create(ctx *context.Context, u *nutritionistTypes.Nutritionist) *core.BaseError
+	Update(ctx *context.Context, u *nutritionistTypes.Nutritionist) *core.BaseError
+	Delete(ctx *context.Context, id *uuid.UUID) *core.BaseError
 }
 
 func NewNutritionistRepository(db *gorm.DB) INutritionistRepository {
@@ -32,11 +32,11 @@ func NewNutritionistRepository(db *gorm.DB) INutritionistRepository {
 }
 
 func (r *NutritonistRepository) GetAll(
-	ctx context.Context,
+	ctx *context.Context,
 ) ([]*nutritionistTypes.Nutritionist, *core.BaseError) {
 	var list []*nutritionistTypes.Nutritionist
 
-	result := r.db.WithContext(ctx).Find(&list)
+	result := r.db.WithContext(*ctx).Find(&list)
 	if result.Error != nil {
 		return nil, core.UnexpectedError(result.Error.Error())
 	}
@@ -45,12 +45,12 @@ func (r *NutritonistRepository) GetAll(
 }
 
 func (r *NutritonistRepository) GetById(
-	ctx context.Context,
+	ctx *context.Context,
 	id *uuid.UUID,
 ) (*nutritionistTypes.Nutritionist, *core.BaseError) {
 	var user nutritionistTypes.Nutritionist
 
-	result := r.db.WithContext(ctx).First(&user, "id = ?", id)
+	result := r.db.WithContext(*ctx).First(&user, "id = ?", id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, UserNotFound(id.String())
@@ -62,10 +62,10 @@ func (r *NutritonistRepository) GetById(
 }
 
 func (r *NutritonistRepository) Create(
-	ctx context.Context,
+	ctx *context.Context,
 	u *nutritionistTypes.Nutritionist,
 ) *core.BaseError {
-	result := r.db.WithContext(ctx).Create(u)
+	result := r.db.WithContext(*ctx).Create(u)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
@@ -73,18 +73,18 @@ func (r *NutritonistRepository) Create(
 }
 
 func (r *NutritonistRepository) Update(
-	ctx context.Context,
+	ctx *context.Context,
 	u *nutritionistTypes.Nutritionist,
 ) *core.BaseError {
-	result := r.db.WithContext(ctx).Save(u)
+	result := r.db.WithContext(*ctx).Save(u)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
 	return nil
 }
 
-func (r *NutritonistRepository) Delete(ctx context.Context, id *uuid.UUID) *core.BaseError {
-	result := r.db.WithContext(ctx).Delete(&nutritionistTypes.Nutritionist{}, id)
+func (r *NutritonistRepository) Delete(ctx *context.Context, id *uuid.UUID) *core.BaseError {
+	result := r.db.WithContext(*ctx).Delete(&nutritionistTypes.Nutritionist{}, id)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
@@ -96,12 +96,12 @@ func (r *NutritonistRepository) Delete(ctx context.Context, id *uuid.UUID) *core
 }
 
 func (r *NutritonistRepository) GetByEmailAddress(
-	ctx context.Context,
+	ctx *context.Context,
 	emailAddress string,
 ) (*nutritionistTypes.Nutritionist, *core.BaseError) {
 	var user nutritionistTypes.Nutritionist
 
-	result := r.db.WithContext(ctx).First(&user, "email_address = ?", emailAddress)
+	result := r.db.WithContext(*ctx).First(&user, "email_address = ?", emailAddress)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, UserNotFound(emailAddress)

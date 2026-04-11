@@ -7,6 +7,7 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/internal/security/authentication"
 	"github.com/JooseMM/nutripia-backend-api/internal/security/authorization"
 	"github.com/JooseMM/nutripia-backend-api/internal/security/session"
+	"github.com/JooseMM/nutripia-backend-api/internal/security/verificationCode"
 	"gorm.io/gorm"
 )
 
@@ -34,9 +35,13 @@ func NewApp(db *gorm.DB) *App {
 
 	sessionRepo := session.NewSessionRepository(db)
 	sessionService := session.NewSessionService(sessionRepo)
+	verificationRepo := verificationCode.NewVerificationCodeRepository(db)
+	verificationService := verificationCode.NewVerificationCodeService(verificationRepo)
+
 	authenticationService := authentication.NewAuthenticationService(
 		nutritionistRepo,
 		sessionService,
+		verificationService,
 	)
 	authenticationHandler := authentication.NewAuthenticationHandler(authenticationService)
 

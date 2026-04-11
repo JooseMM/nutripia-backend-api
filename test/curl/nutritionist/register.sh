@@ -3,7 +3,7 @@ curl -v -X POST http://localhost:3000/nutritionist/register \
   -d '{
     "firstname": "juanete",
     "lastname": "moreno",
-    "emailAddress": "john.doe@example.com",
+    "emailAddress": "josexmoreno1998@gmail.com",
     "password": "SecurePassword123!",
     "birthDate": "1995-11-10T00:00:00Z",
     "rut": "26701979-7"

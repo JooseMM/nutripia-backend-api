@@ -38,7 +38,8 @@ func (h *NutriotionistHandler) GetNutritionistById(w http.ResponseWriter, r *htt
 		return
 	}
 
-	user, failure := h.service.GetById(&id, r.Context())
+	ctx := r.Context()
+	user, failure := h.service.GetById(&id, &ctx)
 	if failure != nil {
 		response.WriteJSON(w, failure.StatusCode, failure)
 		return
@@ -82,7 +83,8 @@ func (h *NutriotionistHandler) UpdateNutritionistById(w http.ResponseWriter, r *
 		return
 	}
 
-	failure := h.service.UpdateIdentityInformation(&id, &dto, r.Context())
+	ctx := r.Context()
+	failure := h.service.UpdateIdentityInformation(&id, &dto, &ctx)
 	if failure != nil {
 		response.WriteJSON(w, failure.StatusCode, failure)
 		return
@@ -104,7 +106,8 @@ func (h *NutriotionistHandler) DeleteNutritionistById(w http.ResponseWriter, r *
 		return
 	}
 
-	err := h.service.DeleteOne(&id, r.Context())
+	ctx := r.Context()
+	err := h.service.DeleteOne(&id, &ctx)
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return

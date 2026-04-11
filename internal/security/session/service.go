@@ -22,11 +22,11 @@ type ISessionService interface {
 	CreateSession(
 		userId *uuid.UUID,
 		role *authenticationTypes.UserRoles,
-		ctx context.Context,
+		ctx *context.Context,
 	) (*string, *core.BaseError)
-	VerifySession(sessionHash *string, ctx context.Context) (*sessionTypes.Session, *core.BaseError)
-	DeleteSession(sessionId *uuid.UUID, ctx context.Context) *core.BaseError
-	DeleteAllSessionByUserId(userId *uuid.UUID, ctx context.Context) *core.BaseError
+	VerifySession(sessionHash *string, ctx *context.Context) (*sessionTypes.Session, *core.BaseError)
+	DeleteSession(sessionId *uuid.UUID, ctx *context.Context) *core.BaseError
+	DeleteAllSessionByUserId(userId *uuid.UUID, ctx *context.Context) *core.BaseError
 }
 
 func NewSessionService(repo ISessionRepository) ISessionService {
@@ -36,7 +36,7 @@ func NewSessionService(repo ISessionRepository) ISessionService {
 func (s *SessionService) CreateSession(
 	userId *uuid.UUID,
 	role *authenticationTypes.UserRoles,
-	ctx context.Context,
+	ctx *context.Context,
 ) (*string, *core.BaseError) {
 	token, tokenErr := s.generateToken()
 	if tokenErr != nil {
@@ -52,7 +52,7 @@ func (s *SessionService) CreateSession(
 		ExpiredAt:   now.Add(72 * time.Hour),
 	}
 
-	if err := s.Repo.CreateSession(ctx, *session); err != nil {
+	if err := s.Repo.CreateSession(*ctx, *session); err != nil {
 		return nil, err
 	}
 
@@ -61,11 +61,11 @@ func (s *SessionService) CreateSession(
 
 func (s *SessionService) VerifySession(
 	sessionToken *string,
-	ctx context.Context,
+	ctx *context.Context,
 ) (*sessionTypes.Session, *core.BaseError) {
 	hash := s.hashToken(sessionToken)
 
-	session, sessionErr := s.Repo.GetByHash(ctx, &hash)
+	session, sessionErr := s.Repo.GetByHash(*ctx, &hash)
 	if sessionErr != nil {
 		return nil, sessionErr
 	}
@@ -77,15 +77,15 @@ func (s *SessionService) VerifySession(
 	return session, nil
 }
 
-func (s *SessionService) DeleteSession(sessionId *uuid.UUID, ctx context.Context) *core.BaseError {
-	return s.Repo.DeleteOne(ctx, sessionId)
+func (s *SessionService) DeleteSession(sessionId *uuid.UUID, ctx *context.Context) *core.BaseError {
+	return s.Repo.DeleteOne(*ctx, sessionId)
 }
 
 func (s *SessionService) DeleteAllSessionByUserId(
 	userId *uuid.UUID,
-	ctx context.Context,
+	ctx *context.Context,
 ) *core.BaseError {
-	return s.Repo.DeleteByUserId(ctx, userId)
+	return s.Repo.DeleteByUserId(*ctx, userId)
 }
 
 func (s *SessionService) generateToken() (*string, error) {

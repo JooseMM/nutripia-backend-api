@@ -9,11 +9,18 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/internal/clients/types"
 	nutritionistTypes "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types"
 	sessionTypes "github.com/JooseMM/nutripia-backend-api/internal/security/session/types"
+	verificationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/verificationCode/types"
 	"github.com/JooseMM/nutripia-backend-api/internal/storage"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		fmt.Print(err.Error())
+		return
+	}
+
 	var db, err = storage.InitDB("host=localhost user=postgres password=Password123! dbname=nutripia_db port=5432 sslmode=disable")
 	if err != nil {
 		fmt.Print("Error")
@@ -40,17 +47,26 @@ func main() {
 		return
 	}
 
+	if err = db.AutoMigrate(&verificationTypes.VerificationToken{}); err != nil {
+		fmt.Print("Migration failed: ", err)
+		return
+	}
+
 	mux := http.NewServeMux()
 	protectedMux := core.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
 
 	/* TODO: admin routes
 	 	mux.HandleFunc("DELETE /nutritionist/{id}", app.NutritionistHandler.DeleteNutritionistById)
-		mux.HandleFunc("GET /nutritionist/{id}", app.NutritionistHandler.GetNutritionistById)
 	*/
 
+	mux.HandleFunc("GET /nutritionist/{id}", app.NutritionistHandler.GetNutritionistById)
 	mux.HandleFunc("POST /nutritionist/register", app.AuthenticationHandler.RegisterNutritionist)
 	mux.HandleFunc("POST /nutritionist/login", app.AuthenticationHandler.LoginNutritionist)
+	mux.HandleFunc(
+		"POST /nutritionist/confirm-email",
+		app.AuthenticationHandler.ConfirmedNutritionistEmail,
+	)
 
 	mux.Handle("PUT /nutritionist/{id}",
 		app.AuthorizationMiddlewares.NutritionistOnly(

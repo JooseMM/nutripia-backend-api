@@ -2,9 +2,12 @@
 main
 # If you use 'go build -o app', ignore that too
 app
+# Enviroments
+.env
 # Ignore all executable binaries (common in Go)
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+

@@ -14,6 +14,7 @@ import (
 type IAuthenticationHandler interface {
 	RegisterNutritionist(w http.ResponseWriter, r *http.Request)
 	LoginNutritionist(w http.ResponseWriter, r *http.Request)
+	ConfirmedNutritionistEmail(w http.ResponseWriter, r *http.Request)
 }
 
 type AuthenticationHandler struct {
@@ -39,18 +40,14 @@ func (h *AuthenticationHandler) RegisterNutritionist(w http.ResponseWriter, r *h
 		return
 	}
 
-	id, failure := h.service.RegisterNutritionist(&dto, r.Context())
+	ctx := r.Context()
+	failure := h.service.RegisterNutritionist(&dto, &ctx)
 	if failure != nil {
 		response.WriteJSON(w, failure.StatusCode, failure)
 		return
 	}
 
-	idStr := id.String()
-	apiResponse := &response.ApiResponse[string]{
-		Success: true,
-		Data:    &idStr,
-	}
-	response.WriteJSON(w, http.StatusCreated, apiResponse)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *AuthenticationHandler) LoginNutritionist(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +61,8 @@ func (h *AuthenticationHandler) LoginNutritionist(w http.ResponseWriter, r *http
 	}
 
 	role := authenticationTypes.NUTRITIONIST
-	token, err := h.service.Login(&dto, &role, r.Context())
+	ctx := r.Context()
+	token, err := h.service.Login(&dto, &role, &ctx)
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
@@ -73,6 +71,31 @@ func (h *AuthenticationHandler) LoginNutritionist(w http.ResponseWriter, r *http
 	apiResponse := &response.ApiResponse[string]{
 		Success: true,
 		Data:    token,
+	}
+
+	response.WriteJSON(w, http.StatusOK, apiResponse)
+}
+
+func (h *AuthenticationHandler) ConfirmedNutritionistEmail(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var dto authenticationDtos.Token
+
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		responseErr := core.ValidationError([]string{err.Error()})
+		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+		return
+	}
+
+	ctx := r.Context()
+	sessionToken, err := h.service.ConfirmedEmail(&dto.Token, &ctx)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+
+	apiResponse := &response.ApiResponse[string]{
+		Success: true,
+		Data:    sessionToken,
 	}
 
 	response.WriteJSON(w, http.StatusOK, apiResponse)

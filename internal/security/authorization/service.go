@@ -47,7 +47,8 @@ func (s *AuthorizationMiddlewares) NutritionistOnly(next http.HandlerFunc) http.
 			return
 		}
 
-		user, userErr := s.NutritionistRepo.GetById(r.Context(), &session.UserId)
+		ctx := r.Context()
+		user, userErr := s.NutritionistRepo.GetById(&ctx, &session.UserId)
 		if userErr != nil {
 			if userErr.ErrorCode == string(core.UNEXPECTED_ERROR) {
 				response.WriteJSON(w, userErr.StatusCode, userErr)
@@ -58,15 +59,15 @@ func (s *AuthorizationMiddlewares) NutritionistOnly(next http.HandlerFunc) http.
 			return
 		}
 
-		// if !user.IsEmailConfirmed {
-		// 	responseErr := NotEnoughPermissions()
-		// 	response.WriteJSON(w, responseErr.StatusCode, responseErr)
-		// 	return
-		// }
+		if !user.IsEmailConfirmed {
+			responseErr := NotEnoughPermissions()
+			response.WriteJSON(w, responseErr.StatusCode, responseErr)
+			return
+		}
 
-		ctx := context.WithValue(r.Context(), UserIdKey, user.ID)
-		ctx = context.WithValue(ctx, RoleIdKey, session.Role)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		newContext := context.WithValue(ctx, UserIdKey, user.ID)
+		newContext = context.WithValue(newContext, RoleIdKey, session.Role)
+		next.ServeHTTP(w, r.WithContext(newContext))
 	})
 }
 
@@ -109,7 +110,8 @@ func (s *AuthorizationMiddlewares) validateSession(
 		return nil, Unauthenticated()
 	}
 
-	session, e := s.SessionService.VerifySession(&token, r.Context())
+	ctx := r.Context()
+	session, e := s.SessionService.VerifySession(&token, &ctx)
 	if e != nil {
 		if e.ErrorCode == string(core.UNEXPECTED_ERROR) {
 			return nil, e

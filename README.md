@@ -1,4 +1,5 @@
 # TODO
 
-- [  ] Implement get all clients
-- [  ] Implement email notification with gmail api
+- [ x ] Implement get all clients
+- [ x ] Implement email notification with gmail api
+- [   ] Implement forgot password

@@ -11,12 +11,12 @@ import (
 )
 
 type INutritionistService interface {
-	GetById(id *uuid.UUID, ctx context.Context) (*nutritionistTypes.Nutritionist, *core.BaseError)
-	DeleteOne(id *uuid.UUID, ctx context.Context) *core.BaseError
+	GetById(id *uuid.UUID, tx *context.Context) (*nutritionistTypes.Nutritionist, *core.BaseError)
+	DeleteOne(id *uuid.UUID, ctx *context.Context) *core.BaseError
 	UpdateIdentityInformation(
 		id *uuid.UUID,
 		userDto *nutritionistDtos.UpdateNutritionistIdentityRequest,
-		ctx context.Context,
+		ctx *context.Context,
 	) *core.BaseError
 }
 
@@ -31,7 +31,7 @@ func NewUserService(repo INutritionistRepository) INutritionistService {
 
 func (u *NutritionistService) GetById(
 	id *uuid.UUID,
-	ctx context.Context,
+	ctx *context.Context,
 ) (*nutritionistTypes.Nutritionist, *core.BaseError) {
 	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
 	if unexpectedErr != nil {
@@ -43,7 +43,7 @@ func (u *NutritionistService) GetById(
 
 func (u *NutritionistService) DeleteOne(
 	id *uuid.UUID,
-	ctx context.Context,
+	ctx *context.Context,
 ) *core.BaseError {
 	err := u.Repo.Delete(ctx, id)
 	if err != nil {
@@ -56,7 +56,7 @@ func (u *NutritionistService) DeleteOne(
 func (u *NutritionistService) UpdateIdentityInformation(
 	id *uuid.UUID,
 	userDto *nutritionistDtos.UpdateNutritionistIdentityRequest,
-	ctx context.Context,
+	ctx *context.Context,
 ) *core.BaseError {
 	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
 	if unexpectedErr != nil {
