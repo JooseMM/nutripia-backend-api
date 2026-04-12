@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types/dtos"
@@ -15,6 +16,7 @@ type IAuthenticationHandler interface {
 	RegisterNutritionist(w http.ResponseWriter, r *http.Request)
 	LoginNutritionist(w http.ResponseWriter, r *http.Request)
 	ConfirmedNutritionistEmail(w http.ResponseWriter, r *http.Request)
+	SendResetPasswordToken(w http.ResponseWriter, r *http.Request)
 }
 
 type AuthenticationHandler struct {
@@ -100,3 +102,22 @@ func (h *AuthenticationHandler) ConfirmedNutritionistEmail(w http.ResponseWriter
 
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
+
+func (h *AuthenticationHandler) SendResetPasswordToken(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var dto authenticationDtos.SendResetPasswordTokenRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		responseErr := core.ValidationError([]string{err.Error()})
+		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+		return
+	}
+
+	ctx := r.Context()
+	if err := h.service.SendResetPasswordToken(&dto.EmailAddress, &ctx); err != nil {
+		fmt.Println("Err: " + err.Description)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+

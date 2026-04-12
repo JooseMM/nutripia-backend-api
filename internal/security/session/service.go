@@ -3,9 +3,7 @@ package session
 import (
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"time"
 
 	authenticationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types"
@@ -46,7 +44,7 @@ func (s *SessionService) CreateSession(
 	now := time.Now().UTC()
 	session := &sessionTypes.Session{
 		ID:          uuid.New(),
-		SessionHash: s.hashToken(token),
+		SessionHash: core.HashToken(token),
 		Role:        *role,
 		UserId:      *userId,
 		ExpiredAt:   now.Add(72 * time.Hour),
@@ -63,7 +61,7 @@ func (s *SessionService) VerifySession(
 	sessionToken *string,
 	ctx *context.Context,
 ) (*sessionTypes.Session, *core.BaseError) {
-	hash := s.hashToken(sessionToken)
+	hash := core.HashToken(sessionToken)
 
 	session, sessionErr := s.Repo.GetByHash(*ctx, &hash)
 	if sessionErr != nil {
@@ -97,9 +95,4 @@ func (s *SessionService) generateToken() (*string, error) {
 
 	token := base64.RawURLEncoding.EncodeToString(b)
 	return &token, nil
-}
-
-func (s *SessionService) hashToken(token *string) string {
-	hash := sha256.Sum256([]byte(*token))
-	return hex.EncodeToString(hash[:])
 }

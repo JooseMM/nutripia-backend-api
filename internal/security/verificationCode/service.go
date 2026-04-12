@@ -14,7 +14,10 @@ type VerificationCodeService struct {
 }
 
 type IVerificationCodeService interface {
-	Create(userId uuid.UUID, ctx *context.Context) (*string, *core.BaseError)
+	Create(userId uuid.UUID,
+		token *string,
+		expiredAt time.Time,
+		ctx *context.Context) *core.BaseError
 	Verify(token *string, ctx *context.Context) (*uuid.UUID, *core.BaseError)
 }
 
@@ -24,33 +27,31 @@ func NewVerificationCodeService(repo IVerificationCodeRepository) IVerificationC
 
 func (s *VerificationCodeService) Create(
 	userId uuid.UUID,
+	token *string,
+	expiredAt time.Time,
 	ctx *context.Context,
-) (*string, *core.BaseError) {
-	token, tokenErr := core.GenerateToken(6)
-	if tokenErr != nil {
-		return nil, core.UnexpectedError(tokenErr.Error())
-	}
-
-	now := time.Now().UTC()
+) *core.BaseError {
+	hash := core.HashToken(token)
 	verificationCode := &verificationTypes.VerificationToken{
 		ID:        uuid.New(),
-		Token:     *token,
+		Token:     hash,
 		UserId:    userId,
-		ExpiredAt: now.Add(24 * time.Hour),
+		ExpiredAt: expiredAt,
 	}
 
 	if err := s.Repo.Create(ctx, verificationCode); err != nil {
-		return nil, err
+		return err
 	}
 
-	return token, nil
+	return nil
 }
 
 func (s *VerificationCodeService) Verify(
 	token *string,
 	ctx *context.Context,
 ) (*uuid.UUID, *core.BaseError) {
-	verificationCode, verificationErr := s.Repo.GetByToken(ctx, token)
+	hash := core.HashToken(token)
+	verificationCode, verificationErr := s.Repo.GetByToken(ctx, &hash)
 	if verificationErr != nil {
 		return nil, verificationErr
 	}

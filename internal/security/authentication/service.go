@@ -2,13 +2,14 @@ package authentication
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/JooseMM/nutripia-backend-api/internal/notifications/email"
 	"github.com/JooseMM/nutripia-backend-api/internal/notifications/templates"
 	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist"
-	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types"
-	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types/dtos"
+	nutritionistTypes "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types"
+	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types/dtos"
 	authenticationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types"
 	authenticationDtos "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types/dtos"
 	"github.com/JooseMM/nutripia-backend-api/internal/security/session"
@@ -31,6 +32,10 @@ type IAuthenticationService interface {
 		token *string,
 		ctx *context.Context,
 	) (*string, *core.BaseError)
+	SendResetPasswordToken(
+		emailAddress *string,
+		ctx *context.Context,
+	) *core.BaseError
 }
 
 type AuthenticationService struct {
@@ -72,7 +77,7 @@ func (s *AuthenticationService) RegisterNutritionist(
 		return core.UnexpectedError(hashErr.Error())
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	user := &nutritionistTypes.Nutritionist{
 		ID: uuid.New(),
 		NutritionistIdentity: nutritionistTypes.NutritionistIdentity{
@@ -96,16 +101,21 @@ func (s *AuthenticationService) RegisterNutritionist(
 		return creationErr
 	}
 
-	token, tokenErr := s.VerificationService.Create(user.ID, ctx)
+	token, tokenErr := core.GenerateAZToken(6)
 	if tokenErr != nil {
-		return tokenErr
+		return core.UnexpectedError(tokenErr.Error())
 	}
 
-	if err := s.sendNotification(&user.Firstname, token); err != nil {
+	if err := s.VerificationService.Create(
+		user.ID,
+		&token,
+		now.Add(15*time.Minute),
+		ctx,
+	); err != nil {
 		return err
 	}
 
-	return nil
+	return s.sendRegistrationNotification(&user.Firstname, &token)
 }
 
 func (s *AuthenticationService) Login(
@@ -161,7 +171,7 @@ func (s *AuthenticationService) ConfirmedEmail(
 	return token, nil
 }
 
-func (s *AuthenticationService) sendNotification(
+func (s *AuthenticationService) sendRegistrationNotification(
 	nutritionistName *string,
 	token *string,
 ) *core.BaseError {
@@ -183,8 +193,58 @@ func (s *AuthenticationService) sendNotification(
 		return senderErr
 	}
 
-	if err := sender.Send(); err != nil {
+	return sender.Send()
+}
+
+func (s *AuthenticationService) SendResetPasswordToken(
+	emailAddress *string,
+	ctx *context.Context,
+) *core.BaseError {
+	user, userErr := s.NutritionistRepo.GetByEmailAddress(ctx, *emailAddress)
+	if userErr != nil {
+		return userErr
+	}
+
+	if !user.IsEmailConfirmed {
+		return EmailNotConfirmed()
+	}
+
+	token, tokenErr := core.GenerateToken(16)
+	if tokenErr != nil {
+		return core.UnexpectedError(tokenErr.Error())
+	}
+
+	now := time.Now().UTC()
+	if err := s.VerificationService.Create(
+		user.ID,
+		token,
+		now.Add(15*time.Minute),
+		ctx,
+	); err != nil {
 		return err
 	}
-	return nil
+
+	return s.sendResetPasswordNotification(token)
+}
+
+func (s *AuthenticationService) sendResetPasswordNotification(
+	token *string,
+) *core.BaseError {
+	frontURL := fmt.Sprintf("https://www.google.com/%s", *token)
+
+	replacements := map[string]string{
+		"{{url}}": frontURL,
+	}
+
+	sender, senderErr := email.NewMailSender(
+		[]string{"josexmoreno1998@gmail.com"},
+		"Finaliza tu registro",
+		templates.RESET_PASSWORD_TOKEN,
+		replacements,
+	)
+	if senderErr != nil {
+		return senderErr
+	}
+
+	return sender.Send()
 }
