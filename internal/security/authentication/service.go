@@ -36,6 +36,10 @@ type IAuthenticationService interface {
 		emailAddress *string,
 		ctx *context.Context,
 	) *core.BaseError
+	VerifyChangePasswordToken(
+		token *string,
+		ctx *context.Context,
+	) (*uuid.UUID, *core.BaseError)
 }
 
 type AuthenticationService struct {
@@ -171,6 +175,18 @@ func (s *AuthenticationService) ConfirmedEmail(
 	return token, nil
 }
 
+func (s *AuthenticationService) VerifyChangePasswordToken(
+	token *string,
+	ctx *context.Context,
+) (*uuid.UUID, *core.BaseError) {
+	userId, verificationErr := s.VerificationService.Verify(token, ctx)
+	if verificationErr != nil {
+		return nil, verificationErr
+	}
+
+	return userId, nil
+}
+
 func (s *AuthenticationService) sendRegistrationNotification(
 	nutritionistName *string,
 	token *string,
@@ -238,7 +254,7 @@ func (s *AuthenticationService) sendResetPasswordNotification(
 
 	sender, senderErr := email.NewMailSender(
 		[]string{"josexmoreno1998@gmail.com"},
-		"Finaliza tu registro",
+		"Cambio de Contraseña",
 		templates.RESET_PASSWORD_TOKEN,
 		replacements,
 	)

@@ -64,6 +64,7 @@ func main() {
 	mux.HandleFunc("POST /nutritionist/register", app.AuthenticationHandler.RegisterNutritionist)
 	mux.HandleFunc("POST /nutritionist/login", app.AuthenticationHandler.LoginNutritionist)
 	mux.HandleFunc("POST /nutritionist/send-reset-password", app.AuthenticationHandler.SendResetPasswordToken)
+	mux.HandleFunc("POST /nutritionist/verify-reset-password", app.AuthenticationHandler.VerifyResetPasswordToken)
 
 	mux.HandleFunc(
 		"POST /nutritionist/confirm-email",

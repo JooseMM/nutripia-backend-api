@@ -17,6 +17,7 @@ type IAuthenticationHandler interface {
 	LoginNutritionist(w http.ResponseWriter, r *http.Request)
 	ConfirmedNutritionistEmail(w http.ResponseWriter, r *http.Request)
 	SendResetPasswordToken(w http.ResponseWriter, r *http.Request)
+	VerifyResetPasswordToken(w http.ResponseWriter, r *http.Request)
 }
 
 type AuthenticationHandler struct {
@@ -121,3 +122,27 @@ func (h *AuthenticationHandler) SendResetPasswordToken(w http.ResponseWriter, r 
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *AuthenticationHandler) VerifyResetPasswordToken(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var dto authenticationDtos.Token
+
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		responseErr := core.ValidationError([]string{err.Error()})
+		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+		return
+	}
+
+	ctx := r.Context()
+	userId, verificationErr := h.service.VerifyChangePasswordToken(&dto.Token, &ctx)
+	if verificationErr != nil {
+		response.WriteJSON(w, verificationErr.StatusCode, verificationErr)
+		return
+	}
+
+	userIdStr := userId.String()
+	apiResponse := &response.ApiResponse[string]{
+		Success: true,
+		Data:    &userIdStr,
+	}
+	response.WriteJSON(w, http.StatusOK, apiResponse)
+}
