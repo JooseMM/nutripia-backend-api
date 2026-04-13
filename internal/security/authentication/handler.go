@@ -18,6 +18,7 @@ type IAuthenticationHandler interface {
 	ConfirmedNutritionistEmail(w http.ResponseWriter, r *http.Request)
 	SendResetPasswordToken(w http.ResponseWriter, r *http.Request)
 	VerifyResetPasswordToken(w http.ResponseWriter, r *http.Request)
+	CompleteResetPassword(w http.ResponseWriter, r *http.Request)
 }
 
 type AuthenticationHandler struct {
@@ -63,6 +64,11 @@ func (h *AuthenticationHandler) LoginNutritionist(w http.ResponseWriter, r *http
 		return
 	}
 
+	if err := dto.Validate(); err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+
 	role := authenticationTypes.NUTRITIONIST
 	ctx := r.Context()
 	token, err := h.service.Login(&dto, &role, &ctx)
@@ -86,6 +92,11 @@ func (h *AuthenticationHandler) ConfirmedNutritionistEmail(w http.ResponseWriter
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		responseErr := core.ValidationError([]string{err.Error()})
 		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+		return
+	}
+
+	if err := dto.Validate(); err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
@@ -114,6 +125,11 @@ func (h *AuthenticationHandler) SendResetPasswordToken(w http.ResponseWriter, r 
 		return
 	}
 
+	if err := dto.Validate(); err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+
 	ctx := r.Context()
 	if err := h.service.SendResetPasswordToken(&dto.EmailAddress, &ctx); err != nil {
 		fmt.Println("Err: " + err.Description)
@@ -132,8 +148,13 @@ func (h *AuthenticationHandler) VerifyResetPasswordToken(w http.ResponseWriter, 
 		return
 	}
 
+	if err := dto.Validate(); err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+
 	ctx := r.Context()
-	userId, verificationErr := h.service.VerifyChangePasswordToken(&dto.Token, &ctx)
+	userId, verificationErr := h.service.VerifyResetPasswordToken(&dto.Token, &ctx)
 	if verificationErr != nil {
 		response.WriteJSON(w, verificationErr.StatusCode, verificationErr)
 		return
@@ -145,4 +166,28 @@ func (h *AuthenticationHandler) VerifyResetPasswordToken(w http.ResponseWriter, 
 		Data:    &userIdStr,
 	}
 	response.WriteJSON(w, http.StatusOK, apiResponse)
+}
+
+func (h *AuthenticationHandler) CompleteResetPassword(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var dto authenticationDtos.ChangePasswordRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		responseErr := core.ValidationError([]string{err.Error()})
+		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+		return
+	}
+
+	if err := dto.Validate(); err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+
+	ctx := r.Context()
+	if err := h.service.CompleteResetPassword(&dto.UserId, &dto.Password, &ctx); err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

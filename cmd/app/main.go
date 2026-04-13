@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/JooseMM/nutripia-backend-api/cmd/app/app"
@@ -18,10 +19,9 @@ func main() {
 
 	var db, err = storage.InitDB("host=localhost user=postgres password=Password123! dbname=nutripia_db port=5432 sslmode=disable")
 	if err != nil {
-		fmt.Println("Database error: %s", err)
+		slog.Error("Database initialization failed", "error", err)
 		return
 	}
-
 
 	mux := http.NewServeMux()
 	protectedMux := core.RecoveryMiddleware(mux)
@@ -51,6 +51,10 @@ func main() {
 	mux.HandleFunc(
 		"POST /nutritionist/verify-reset-password",
 		app.AuthenticationHandler.VerifyResetPasswordToken,
+	)
+	mux.HandleFunc(
+		"POST /nutritionist/complete-reset-password",
+		app.AuthenticationHandler.CompleteResetPassword,
 	)
 	mux.HandleFunc(
 		"POST /nutritionist/confirm-email",

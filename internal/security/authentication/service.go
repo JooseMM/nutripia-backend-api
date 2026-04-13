@@ -38,10 +38,15 @@ type IAuthenticationService interface {
 		emailAddress *string,
 		ctx *context.Context,
 	) *core.BaseError
-	VerifyChangePasswordToken(
+	VerifyResetPasswordToken(
 		token *string,
 		ctx *context.Context,
 	) (*uuid.UUID, *core.BaseError)
+	CompleteResetPassword(
+		userId *uuid.UUID,
+		password *string,
+		ctx *context.Context,
+	) *core.BaseError
 }
 
 type AuthenticationService struct {
@@ -177,7 +182,7 @@ func (s *AuthenticationService) ConfirmedEmail(
 	return token, nil
 }
 
-func (s *AuthenticationService) VerifyChangePasswordToken(
+func (s *AuthenticationService) VerifyResetPasswordToken(
 	token *string,
 	ctx *context.Context,
 ) (*uuid.UUID, *core.BaseError) {
@@ -218,6 +223,33 @@ func (s *AuthenticationService) SendResetPasswordToken(
 	}
 
 	return s.sendResetPasswordToken(&user.EmailAddress, token)
+}
+
+func (s *AuthenticationService) CompleteResetPassword(
+	userId *uuid.UUID,
+	password *string,
+	ctx *context.Context,
+) *core.BaseError {
+	user, userErr := s.NutritionistRepo.GetById(ctx, userId)
+	if userErr != nil {
+		return userErr
+	}
+
+	if !user.IsEmailConfirmed {
+		return EmailNotConfirmed()
+	}
+
+	user.PasswordHash = core.HashToken(password)
+	user.UpdatedAt = time.Now().UTC()
+	if err := s.NutritionistRepo.Update(ctx, user); err != nil {
+		return err
+	}
+
+	if err := s.SessionService.DeleteAllSessionByUserId(userId, ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *AuthenticationService) sendEmailConfirmationToken(

@@ -20,13 +20,11 @@ func (d *CreateClientRequest) Validate() *core.BaseError {
 	d.Firstname = strings.TrimSpace(d.Firstname)
 	d.Lastname = strings.TrimSpace(d.Lastname)
 
-	errorList = append(errorList, ValidateName(d.Firstname, d.Lastname)...)
+	errorList = append(errorList, core.ValidateName(d.Firstname, d.Lastname)...)
 
 	d.EmailAddress = strings.TrimSpace(d.EmailAddress)
-	emailErr := ValidateEmailAddress(d.EmailAddress)
-	if emailErr != nil {
-		errorList = append(errorList, *emailErr)
-	}
+	emailErr := core.ValidateEmailAddress(d.EmailAddress)
+	errorList = append(errorList, emailErr...)
 
 	if len(errorList) == 0 {
 		return nil
