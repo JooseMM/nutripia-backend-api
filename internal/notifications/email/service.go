@@ -1,7 +1,6 @@
 package email
 
 import (
-	"fmt"
 	"net/smtp"
 	"os"
 	"path/filepath"
@@ -63,8 +62,6 @@ func (s *GmailSender) Send() *core.BaseError {
 	if err != nil {
 		return core.UnexpectedError(err.Error())
 	}
-
-	fmt.Println("Email sent successfully!")
 	return nil
 }
 

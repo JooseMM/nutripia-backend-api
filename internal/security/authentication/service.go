@@ -2,7 +2,6 @@ package authentication
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/JooseMM/nutripia-backend-api/internal/notifications/email"
@@ -17,6 +16,9 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/google/uuid"
 )
+
+// Make this an enviroment variable
+const FRONT_URL = "https://www.example.com"
 
 type IAuthenticationService interface {
 	RegisterNutritionist(
@@ -119,7 +121,7 @@ func (s *AuthenticationService) RegisterNutritionist(
 		return err
 	}
 
-	return s.sendRegistrationNotification(&user.Firstname, &token)
+	return s.sendEmailConfirmationToken(&user.EmailAddress, &user.Firstname, &token)
 }
 
 func (s *AuthenticationService) Login(
@@ -187,31 +189,6 @@ func (s *AuthenticationService) VerifyChangePasswordToken(
 	return userId, nil
 }
 
-func (s *AuthenticationService) sendRegistrationNotification(
-	nutritionistName *string,
-	token *string,
-) *core.BaseError {
-	frontURL := "https://www.google.com"
-
-	replacements := map[string]string{
-		"{{firstname}}": *nutritionistName,
-		"{{code}}":      *token,
-		"{{url}}":       frontURL,
-	}
-
-	sender, senderErr := email.NewMailSender(
-		[]string{"josexmoreno1998@gmail.com"},
-		"Finaliza tu registro",
-		templates.REGISTRATION,
-		replacements,
-	)
-	if senderErr != nil {
-		return senderErr
-	}
-
-	return sender.Send()
-}
-
 func (s *AuthenticationService) SendResetPasswordToken(
 	emailAddress *string,
 	ctx *context.Context,
@@ -240,20 +217,44 @@ func (s *AuthenticationService) SendResetPasswordToken(
 		return err
 	}
 
-	return s.sendResetPasswordNotification(token)
+	return s.sendResetPasswordToken(&user.EmailAddress, token)
 }
 
-func (s *AuthenticationService) sendResetPasswordNotification(
+func (s *AuthenticationService) sendEmailConfirmationToken(
+	targetAddress *string,
+	nutritionistName *string,
 	token *string,
 ) *core.BaseError {
-	frontURL := fmt.Sprintf("https://www.google.com/%s", *token)
-
 	replacements := map[string]string{
-		"{{url}}": frontURL,
+		"{{firstname}}": *nutritionistName,
+		"{{code}}":      *token,
+		"{{url}}":       FRONT_URL + "/authentication/verify-email",
 	}
 
 	sender, senderErr := email.NewMailSender(
-		[]string{"josexmoreno1998@gmail.com"},
+		[]string{*targetAddress},
+		"Finaliza tu registro",
+		templates.REGISTRATION,
+		replacements,
+	)
+	if senderErr != nil {
+		return senderErr
+	}
+
+	return sender.Send()
+}
+
+func (s *AuthenticationService) sendResetPasswordToken(
+	targetAddress *string,
+	token *string,
+) *core.BaseError {
+
+	replacements := map[string]string{
+		"{{url}}": FRONT_URL + "/authentication/change-password" + *token,
+	}
+
+	sender, senderErr := email.NewMailSender(
+		[]string{*targetAddress},
 		"Cambio de Contraseña",
 		templates.RESET_PASSWORD_TOKEN,
 		replacements,
