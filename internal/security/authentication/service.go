@@ -29,7 +29,7 @@ type IAuthenticationService interface {
 		dto *authenticationDtos.LoginRequest,
 		role *authenticationTypes.UserRoles,
 		ctx *context.Context,
-	) (*string, *core.BaseError)
+	) (*authenticationDtos.LoginResponse, *core.BaseError)
 	ConfirmedEmail(
 		token *string,
 		ctx *context.Context,
@@ -133,7 +133,7 @@ func (s *AuthenticationService) Login(
 	dto *authenticationDtos.LoginRequest,
 	role *authenticationTypes.UserRoles,
 	ctx *context.Context,
-) (*string, *core.BaseError) {
+) (*authenticationDtos.LoginResponse, *core.BaseError) {
 	user, userErr := s.NutritionistRepo.GetByEmailAddress(ctx, dto.EmailAddress)
 	if userErr != nil {
 		return nil, WrongCredentials()
@@ -152,7 +152,13 @@ func (s *AuthenticationService) Login(
 		return nil, tokenErr
 	}
 
-	return token, nil
+	response := &authenticationDtos.LoginResponse{
+		UserId:    user.ID,
+		Firstname: user.Firstname,
+		Role:      authenticationTypes.NUTRITIONIST,
+		Token:     *token,
+	}
+	return response, nil
 }
 func (s *AuthenticationService) ConfirmedEmail(
 	token *string,

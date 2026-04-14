@@ -5,6 +5,7 @@ type UserRoles int
 const (
 	CLIENT UserRoles = iota
 	NUTRITIONIST
+	ADMIN
 )
 
 func (r *UserRoles) IsNutritionist() bool {

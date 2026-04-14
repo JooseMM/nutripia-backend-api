@@ -71,15 +71,15 @@ func (h *AuthenticationHandler) LoginNutritionist(w http.ResponseWriter, r *http
 
 	role := authenticationTypes.NUTRITIONIST
 	ctx := r.Context()
-	token, err := h.service.Login(&dto, &role, &ctx)
+	loginResponse, err := h.service.Login(&dto, &role, &ctx)
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	apiResponse := &response.ApiResponse[string]{
+	apiResponse := &response.ApiResponse[authenticationDtos.LoginResponse]{
 		Success: true,
-		Data:    token,
+		Data:    loginResponse,
 	}
 
 	response.WriteJSON(w, http.StatusOK, apiResponse)
