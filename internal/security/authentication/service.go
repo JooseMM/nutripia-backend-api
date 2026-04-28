@@ -50,13 +50,13 @@ type IAuthenticationService interface {
 }
 
 type AuthenticationService struct {
-	NutritionistRepo    nutritionist.INutritionistRepository
+	NutritionistRepo    nutritionist.RepositoryManager
 	SessionService      session.ISessionService
 	VerificationService verificationCode.IVerificationCodeService
 }
 
 func NewAuthenticationService(
-	nutritionistRepo nutritionist.INutritionistRepository,
+	nutritionistRepo nutritionist.RepositoryManager,
 	sessionService session.ISessionService,
 	verificationService verificationCode.IVerificationCodeService,
 ) IAuthenticationService {

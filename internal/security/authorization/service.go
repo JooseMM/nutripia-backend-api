@@ -22,13 +22,13 @@ type IAuthorizationMiddlewares interface {
 }
 
 type AuthorizationMiddlewares struct {
-	NutritionistRepo nutritionist.INutritionistRepository
+	NutritionistRepo nutritionist.RepositoryManager
 	ClientRepo       clients.IClientRepository
 	SessionService   session.ISessionService
 }
 
 func NewAuthorizationMiddlewares(
-	nutritionistRepo nutritionist.INutritionistRepository,
+	nutritionistRepo nutritionist.RepositoryManager,
 	clientRepo clients.IClientRepository,
 	sessionService session.ISessionService,
 ) IAuthorizationMiddlewares {

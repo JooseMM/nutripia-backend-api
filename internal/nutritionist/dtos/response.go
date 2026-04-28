@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type UserDto struct {
+type Nutritionist struct {
 	ID           uuid.UUID `json:"id"`
 	Firstname    string    `json:"firstname"`
 	Lastname     string    `json:"lastname"`
