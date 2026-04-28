@@ -33,16 +33,12 @@ func main() {
 
 	/* Authentication */
 	mux.HandleFunc(
-		"GET /nutritionist/{id}",
-		app.NutritionistHandler.GetNutritionistById,
-	)
-	mux.HandleFunc(
 		"POST /nutritionist/register",
 		app.AuthenticationHandler.RegisterNutritionist,
 	)
 	mux.HandleFunc(
-		"POST /nutritionist/login",
-		app.AuthenticationHandler.LoginNutritionist,
+		"GET /nutritionist/{id}",
+		app.NutritionistHandler.GetNutritionistById,
 	)
 	mux.HandleFunc(
 		"POST /nutritionist/send-reset-password",
