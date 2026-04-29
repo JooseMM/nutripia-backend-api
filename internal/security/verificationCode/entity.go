@@ -8,12 +8,13 @@ import (
 
 type VerificationManager interface {
 	ToDB() entityDB
-	UserId() valueobject.Identifier
+	IsExpired() bool
 }
 
 type verificationToken struct {
 	id        valueobject.Identifier
-	token     valueobject.Tokenizer 
+	token     valueobject.Tokenizer
+	tokenType valueobject.TokenTypeEnum
 	userId    valueobject.Identifier
 	createdAt time.Time
 	expiredAt time.Time
@@ -27,6 +28,11 @@ func (v *verificationToken) ToDB() entityDB {
 		createdAt: v.createdAt,
 		expiredAt: v.expiredAt,
 	}
+}
+
+func (v *verificationToken) IsExpired() bool {
+	now := time.Now().UTC()
+	return v.expiredAt.Equal(now) || v.expiredAt.Before(now)
 }
 
 func NewVerificationToken(

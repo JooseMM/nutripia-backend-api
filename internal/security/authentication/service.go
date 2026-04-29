@@ -88,7 +88,7 @@ func (s *AuthenticationService) RegisterNutritionist(
 		return err
 	}
 
-	token, err := valueobject.NewEmailVerificationToken()
+	token, err := valueobject.NewEmailConfirmationToken()
 	if err != nil {
 		return err
 	}

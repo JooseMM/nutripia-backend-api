@@ -2,11 +2,9 @@ package verification
 
 import (
 	"context"
-	"time"
 
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
-	"github.com/google/uuid"
 )
 
 type VerificationCodeService struct {
@@ -14,8 +12,11 @@ type VerificationCodeService struct {
 }
 
 type IVerificationCodeService interface {
-	Create(ctx context.Context, verificationToken verificationToken) *core.BaseError
-	Verify(ctx context.Context, token valueobject.Tokenizer) (*uuid.UUID, *core.BaseError)
+	Create(ctx context.Context, verificationToken VerificationManager) *core.BaseError
+	Verify(
+		ctx context.Context,
+		token valueobject.Tokenizer,
+	) (*valueobject.Identifier, *core.BaseError)
 }
 
 func NewVerificationCodeService(repo Repository) IVerificationCodeService {
@@ -26,15 +27,7 @@ func (s *VerificationCodeService) Create(
 	ctx context.Context,
 	verificationToken VerificationManager,
 ) *core.BaseError {
-	hash := core.HashToken(token)
-	verificationCode := &verificationTypes.VerificationToken{
-		ID:        uuid.New(),
-		Token:     hash,
-		UserId:    verificationToken.userId,
-		ExpiredAt: expiredAt,
-	}
-
-	if err := s.Repo.Create(ctx, verificationCode); err != nil {
+	if err := s.Repo.Create(ctx, verificationToken); err != nil {
 		return err
 	}
 
@@ -42,22 +35,21 @@ func (s *VerificationCodeService) Create(
 }
 
 func (s *VerificationCodeService) Verify(
-	token *string,
-	ctx *context.Context,
-) (*uuid.UUID, *core.BaseError) {
-	hash := core.HashToken(token)
-	verificationCode, verificationErr := s.Repo.GetByToken(ctx, &hash)
+	ctx context.Context,
+	token valueobject.Tokenizer,
+) (*valueobject.Identifier, *core.BaseError) {
+	verificationCode, verificationErr := s.Repo.GetByToken(ctx, token)
 	if verificationErr != nil {
 		return nil, verificationErr
 	}
 
-	if verificationCode.ExpiredAt.Before(time.Now().UTC()) {
+	if verificationCode.IsExpired() {
 		return nil, VerificationCodeExpired()
 	}
 
-	if err := s.Repo.Delete(ctx, &verificationCode.ID); err != nil {
+	if err := s.Repo.Delete(ctx, verificationCode.id); err != nil {
 		return nil, err
 	}
 
-	return &verificationCode.UserId, nil
+	return &verificationCode.userId, nil
 }

@@ -9,29 +9,39 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
-const EmailVerificationTokenLength = 6
-const PasswordResetTokenLength = 16
+const emailConfirmationTokenLength = 6
+const passwordResetTokenLength = 16
+
+type TokenTypeEnum int
+
+const (
+	EmailConfirmation TokenTypeEnum = iota
+	PasswordReset
+)
 
 type Tokenizer interface {
 	String() string
+	Hash() string
 }
 
 type Token struct {
-	value string
+	value     string
+	tokenType TokenTypeEnum
 }
 
 func PasswordResetTokenFromString(raw string) (Tokenizer, *core.BaseError) {
-	if utf8.RuneCountInString(raw) < PasswordResetTokenLength {
+	if utf8.RuneCountInString(raw) < passwordResetTokenLength {
 		return nil, core.UnexpectedError("Token: wrong format")
 	}
 
 	return &Token{
-		value: raw,
+		value:     raw,
+		tokenType: PasswordReset,
 	}, nil
 }
 
-func NewPasswordResetTokenFromString(raw string) (Tokenizer, *core.BaseError) {
-	b := make([]byte, PasswordResetTokenLength)
+func NewPasswordResetToken() (Tokenizer, *core.BaseError) {
+	b := make([]byte, passwordResetTokenLength)
 	_, err := rand.Read(b)
 	if err != nil {
 		return nil, core.UnexpectedError(err.Error())
@@ -39,15 +49,16 @@ func NewPasswordResetTokenFromString(raw string) (Tokenizer, *core.BaseError) {
 
 	token := base64.RawURLEncoding.EncodeToString(b)
 	resp := &Token{
-		value: token,
+		value:     token,
+		tokenType: PasswordReset,
 	}
 	return resp, nil
 }
 
-func NewEmailVerificationToken() (Tokenizer, *core.BaseError) {
+func NewEmailConfirmationToken() (Tokenizer, *core.BaseError) {
 	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789"
 
-	token := make([]byte, EmailVerificationTokenLength)
+	token := make([]byte, emailConfirmationTokenLength)
 	for i := range token {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
 		if err != nil {
@@ -57,21 +68,27 @@ func NewEmailVerificationToken() (Tokenizer, *core.BaseError) {
 	}
 
 	resp := &Token{
-		value: string(token),
+		value:     string(token),
+		tokenType: EmailConfirmation,
 	}
 	return resp, nil
 }
 
-func EmailVerificationTokenFromString(raw string) (Tokenizer, *core.BaseError) {
-	if utf8.RuneCountInString(raw) < EmailVerificationTokenLength {
+func EmailConfirmationTokenFromString(raw string) (Tokenizer, *core.BaseError) {
+	if utf8.RuneCountInString(raw) < emailConfirmationTokenLength {
 		return nil, core.UnexpectedError("Token: wrong format")
 	}
 
 	return &Token{
-		value: raw,
+		value:     raw,
+		tokenType: EmailConfirmation,
 	}, nil
 }
 
-func (t Token) String() string {
+func (t *Token) String() string {
 	return t.value
+}
+
+func (t *Token) Hash() string {
+	return core.HashToken(&t.value)
 }
