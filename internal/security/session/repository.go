@@ -3,20 +3,29 @@ package session
 import (
 	"context"
 	"errors"
+	"time"
 
-	sessionTypes "github.com/JooseMM/nutripia-backend-api/internal/security/session/types"
+	authenticationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+type SessionDB struct {
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
+	SessionHash string    `gorm:"column:session_hash;not null"`
+	UserId      uuid.UUID `gorm:"type:uuid;index"`
+	Role        authenticationTypes.UserRoles
+	ExpiredAt   time.Time `gorm:"column:expired_at"`
+}
 
 type SessionRepository struct {
 	db *gorm.DB
 }
 
 type ISessionRepository interface {
-	GetByHash(ctx context.Context, hash *string) (*sessionTypes.Session, *core.BaseError)
-	CreateSession(ctx context.Context, session sessionTypes.Session) *core.BaseError
+	GetByHash(ctx context.Context, hash *string) (*Session, *core.BaseError)
+	CreateSession(ctx context.Context, session Session) *core.BaseError
 	DeleteByUserId(ctx context.Context, userId *uuid.UUID) *core.BaseError
 	DeleteOne(ctx context.Context, sessionId *uuid.UUID) *core.BaseError
 }
@@ -28,8 +37,8 @@ func NewSessionRepository(db *gorm.DB) ISessionRepository {
 func (s *SessionRepository) GetByHash(
 	ctx context.Context,
 	sessionHash *string,
-) (*sessionTypes.Session, *core.BaseError) {
-	var session sessionTypes.Session
+) (*Session, *core.BaseError) {
+	var session Session
 
 	result := s.db.WithContext(ctx).Find(&session, "session_hash = ?", sessionHash)
 	if result.Error != nil {
@@ -45,7 +54,7 @@ func (s *SessionRepository) GetByHash(
 
 func (s *SessionRepository) CreateSession(
 	ctx context.Context,
-	session sessionTypes.Session,
+	session Session,
 ) *core.BaseError {
 	result := s.db.WithContext(ctx).Create(session)
 	if result.Error != nil {
@@ -58,7 +67,7 @@ func (s *SessionRepository) DeleteByUserId(
 	ctx context.Context,
 	userId *uuid.UUID,
 ) *core.BaseError {
-	result := s.db.WithContext(ctx).Where("user_id = ?", userId).Delete(&sessionTypes.Session{})
+	result := s.db.WithContext(ctx).Where("user_id = ?", userId).Delete(&Session{})
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
@@ -74,7 +83,7 @@ func (s *SessionRepository) DeleteOne(
 	ctx context.Context,
 	sessionId *uuid.UUID,
 ) *core.BaseError {
-	result := s.db.WithContext(ctx).Delete(&sessionTypes.Session{}, sessionId)
+	result := s.db.WithContext(ctx).Delete(&Session{}, sessionId)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}

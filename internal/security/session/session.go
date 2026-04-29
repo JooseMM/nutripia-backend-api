@@ -1,4 +1,4 @@
-package sessionTypes
+package session
 
 import (
 	"time"
