@@ -25,11 +25,11 @@ type entityDB struct {
 
 func fromEntity(entity Nutritionist) entityDB {
 	return entityDB{
-		ID:        *entity.Id().Key(),
-		Firstname: *entity.Name().Firstname(),
-		Lastname:  *entity.Name().Lastname(),
+		ID:        entity.Id().Key(),
+		Firstname: entity.Name().Firstname(),
+		Lastname:  entity.Name().Lastname(),
 		Email:     entity.EmailAddress().String(),
-		BirthDate: *entity.BirthDate().Date(),
+		BirthDate: entity.BirthDate().Date(),
 		Password:  entity.Password().String(),
 	}
 }
@@ -46,7 +46,7 @@ func (e *entityDB) toEntity() (Nutritionist, *core.BaseError) {
 	birthDate, err := valueobject.NewBirthDate(e.BirthDate)
 	errList = append(errList, err...)
 
-	password, err := valueobject.FromDB(e.Password)
+	password, err := valueobject.PasswordFromDB(e.Password)
 	errList = append(errList, err...)
 
 	rut, err := valueobject.NewRUT(e.RUT)

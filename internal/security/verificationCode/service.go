@@ -1,41 +1,36 @@
-package verificationCode
+package verification
 
 import (
 	"context"
 	"time"
 
-	verificationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/verificationCode/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/google/uuid"
 )
 
 type VerificationCodeService struct {
-	Repo IVerificationCodeRepository
+	Repo Repository
 }
 
 type IVerificationCodeService interface {
-	Create(userId uuid.UUID,
-		token *string,
-		expiredAt time.Time,
-		ctx *context.Context) *core.BaseError
-	Verify(token *string, ctx *context.Context) (*uuid.UUID, *core.BaseError)
+	Create(ctx context.Context, verificationToken verificationToken) *core.BaseError
+	Verify(ctx context.Context, token valueobject.Tokenizer) (*uuid.UUID, *core.BaseError)
 }
 
-func NewVerificationCodeService(repo IVerificationCodeRepository) IVerificationCodeService {
+func NewVerificationCodeService(repo Repository) IVerificationCodeService {
 	return &VerificationCodeService{repo}
 }
 
 func (s *VerificationCodeService) Create(
-	userId uuid.UUID,
-	token *string,
-	expiredAt time.Time,
-	ctx *context.Context,
+	ctx context.Context,
+	verificationToken VerificationManager,
 ) *core.BaseError {
 	hash := core.HashToken(token)
 	verificationCode := &verificationTypes.VerificationToken{
 		ID:        uuid.New(),
 		Token:     hash,
-		UserId:    userId,
+		UserId:    verificationToken.userId,
 		ExpiredAt: expiredAt,
 	}
 

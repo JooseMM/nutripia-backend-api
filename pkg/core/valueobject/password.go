@@ -93,7 +93,7 @@ func (p *Password) IsEqual(rawPassword string) bool {
 	return false
 }
 
-func FromDB(hash string) (Passworder, []string) {
+func PasswordFromDB(hash string) (Passworder, []string) {
 	if hash == "" {
 		return nil, []string{"Corrupted password comming from database"}
 	}

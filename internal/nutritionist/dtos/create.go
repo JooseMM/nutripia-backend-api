@@ -16,14 +16,6 @@ type RawRegisterNutritionist struct {
 	RUT          string    `json:"rut"`
 }
 
-type RegisterNutritionist struct {
-	name         valueobject.Namer
-	emailAddress valueobject.Emailer
-	password     valueobject.Passworder
-	birthDate    valueobject.BirthDater
-	rut          valueobject.RUTer
-}
-
 func (dto *RawRegisterNutritionist) ToValueObject() (*RegisterNutritionist, *core.BaseError) {
 	var errList []string
 
@@ -63,4 +55,32 @@ func (dto *RawRegisterNutritionist) ToValueObject() (*RegisterNutritionist, *cor
 		birthDate:    birthDate,
 		rut:          rut,
 	}, nil
+}
+
+type RegisterNutritionist struct {
+	name         valueobject.Namer
+	emailAddress valueobject.Emailer
+	password     valueobject.Passworder
+	birthDate    valueobject.BirthDater
+	rut          valueobject.RUTer
+}
+
+func (dto *RegisterNutritionist) Email() valueobject.Emailer {
+	return dto.emailAddress
+}
+
+func (dto *RegisterNutritionist) Password() valueobject.Passworder {
+	return dto.password
+}
+
+func (dto *RegisterNutritionist) Name() valueobject.Namer {
+	return dto.name
+}
+
+func (dto *RegisterNutritionist) BirthDate() valueobject.BirthDater {
+	return dto.birthDate
+}
+
+func (dto *RegisterNutritionist) RUT() valueobject.RUTer {
+	return dto.rut
 }

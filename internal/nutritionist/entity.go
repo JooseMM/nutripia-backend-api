@@ -14,21 +14,22 @@ type Nutritionist interface {
 	BirthDate() valueobject.BirthDater
 	Password() valueobject.Passworder
 	RUT() valueobject.RUTer
+	IsEmailConfirmed() bool
 
 	Update(data nutritionistDtos.UpdateNutritionist)
 	ToDTO() nutritionistDtos.Nutritionist
 }
 
 type Entity struct {
-	id           valueobject.Identifier
-	name         valueobject.Namer
-	emailAddress valueobject.Emailer
-	birthDate    valueobject.BirthDater
-	password     valueobject.Passworder
-	rut          valueobject.RUTer
-
-	createdAt time.Time
-	updatedAt time.Time
+	id               valueobject.Identifier
+	name             valueobject.Namer
+	isEmailConfirmed bool
+	emailAddress     valueobject.Emailer
+	birthDate        valueobject.BirthDater
+	password         valueobject.Passworder
+	rut              valueobject.RUTer
+	createdAt        time.Time
+	updatedAt        time.Time
 }
 
 func (e *Entity) Id() valueobject.Identifier {
@@ -55,6 +56,10 @@ func (e *Entity) BirthDate() valueobject.BirthDater {
 	return e.birthDate
 }
 
+func (e *Entity) IsEmailConfirmed() bool {
+	return e.isEmailConfirmed
+}
+
 func (e *Entity) Update(update nutritionistDtos.UpdateNutritionist) {
 	e.name = update.Name()
 	e.emailAddress = update.EmailAddress()
@@ -64,30 +69,48 @@ func (e *Entity) Update(update nutritionistDtos.UpdateNutritionist) {
 
 func (e *Entity) ToDTO() nutritionistDtos.Nutritionist {
 	return nutritionistDtos.Nutritionist{
-		ID:           e.id.Key(),
-		Firstname:    e.name.Firstname(),
-		Lastname:     e.name.Lastname(),
-		EmailAddress: e.EmailAddress().String(),
-		BirthDate:    e.birthDate.Date(),
+		ID:               e.id.Key(),
+		Firstname:        e.name.Firstname(),
+		Lastname:         e.name.Lastname(),
+		EmailAddress:     e.EmailAddress().String(),
+		IsEmailConfirmed: e.isEmailConfirmed,
+		BirthDate:        e.birthDate.Date(),
+	}
+}
+
+func FromRegisterDTO(data nutritionistDtos.RegisterNutritionist) Nutritionist {
+	now := time.Now().UTC()
+	return &Entity{
+		id:               valueobject.NewIdentifier(),
+		name:             data.Name(),
+		emailAddress:     data.Email(),
+		isEmailConfirmed: false,
+		birthDate:        data.BirthDate(),
+		password:         data.Password(),
+		rut:              data.RUT(),
+		createdAt:        now,
+		updatedAt:        now,
 	}
 }
 
 func NewEntity(
 	name valueobject.Namer,
 	emailAddress valueobject.Emailer,
+	isEmailConfirmed bool,
 	birthDate valueobject.BirthDater,
 	password valueobject.Passworder,
 	rut valueobject.RUTer,
 ) Nutritionist {
-	now := time.Now()
+	now := time.Now().UTC()
 	return &Entity{
-		id:           valueobject.NewIdentifier(),
-		name:         name,
-		emailAddress: emailAddress,
-		birthDate:    birthDate,
-		password:     password,
-		rut:          rut,
-		createdAt:    now,
-		updatedAt:    now,
+		id:               valueobject.NewIdentifier(),
+		name:             name,
+		emailAddress:     emailAddress,
+		isEmailConfirmed: isEmailConfirmed,
+		birthDate:        birthDate,
+		password:         password,
+		rut:              rut,
+		createdAt:        now,
+		updatedAt:        now,
 	}
 }

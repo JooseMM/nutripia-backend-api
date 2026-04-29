@@ -1,4 +1,4 @@
-package verificationCode
+package verification
 
 import (
 	"net/http"

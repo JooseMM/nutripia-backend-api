@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/types/dtos"
+	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/dtos"
 	authenticationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types"
 	authenticationDtos "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
@@ -31,16 +31,10 @@ func NewAuthenticationHandler(service IAuthenticationService) IAuthenticationHan
 
 func (h *AuthenticationHandler) RegisterNutritionist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var dto nutritionistDtos.CreateNutritionistRequest
 
-	err := json.NewDecoder(r.Body).Decode(&dto)
-	if err != nil {
-		http.Error(w, "Bad request: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if err := dto.Validate(); err != nil {
-		response.WriteJSON(w, err.StatusCode, err)
+	user, failure := h.service.RegisterNutritionist(r.Context(), id)
+	if failure != nil {
+		response.WriteJSON(w, failure.StatusCode, failure)
 		return
 	}
 

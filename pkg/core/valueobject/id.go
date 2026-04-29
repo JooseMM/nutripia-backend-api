@@ -30,9 +30,15 @@ func (i *Id) IsEqual(target Identifier) bool {
 func IdentifierFromString(raw string) (Identifier, *core.BaseError) {
 	uuid, err := uuid.Parse(raw)
 	if err != nil {
-		return nil, core.ValidationError([]string{"ID: The identifier provided is not a valid UUID format."})
+		return nil, core.ValidationError(
+			[]string{"ID: The identifier provided is not a valid UUID format."},
+		)
 	}
 	return &Id{key: uuid}, nil
+}
+
+func IdentifierFromDB(id uuid.UUID) Identifier {
+	return &Id{key: id}
 }
 
 func NewIdentifier() Identifier {

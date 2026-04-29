@@ -8,31 +8,6 @@ import (
 	"math/big"
 )
 
-func GenerateAZToken(size uint) (string, error) {
-	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789"
-	
-	token := make([]byte, size)
-	for i := range token {
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		if err != nil { 
-			return "", err
-		}
-		token[i] = charset[num.Int64()]
-	}
-
-	return string(token), nil
-}
-
-func GenerateToken(size int) (*string, error) {
-	b := make([]byte, size)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
-	}
-
-	token := base64.RawURLEncoding.EncodeToString(b)
-	return &token, nil
-}
 
 
 func HashToken(token *string) string {

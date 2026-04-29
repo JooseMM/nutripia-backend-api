@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func DecodeJSON[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
+func DecodeJSON[T any](w http.ResponseWriter, r *http.Request) (T, []string) {
 	var payload T
 
 	// Limit the request body size to prevent memory exhaustion attacks
@@ -13,10 +13,8 @@ func DecodeJSON[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
-		http.Error(w, "Invalid request payload: "+err.Error(), http.StatusBadRequest)
-		return payload, false
+		return payload, []string{"Invalid request payload: " + err.Error()}
 	}
 
-	return payload, true
+	return payload, nil
 }
-
