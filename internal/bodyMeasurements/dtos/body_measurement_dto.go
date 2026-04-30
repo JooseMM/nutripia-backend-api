@@ -6,7 +6,7 @@ import (
 )
 
 type BodyMeasurementDto struct {
-	ID            uuid.UUID `json:"id"`
+	Id            uuid.UUID `json:"id"`
 	Mass          float64   `json:"mass"`
 	Stature       float64   `json:"stature"`
 	SittingHeight float64   `json:"sittingHeight"`

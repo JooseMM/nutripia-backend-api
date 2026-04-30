@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	bodyMeasurementTypes "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -19,23 +18,23 @@ type IBodyMeasurementRepository interface {
 	GetAllByUser(
 		ctx context.Context,
 		userId uuid.UUID,
-	) ([]*bodyMeasurementTypes.BodyMeasurement, *core.BaseError)
+	) ([]BodyMeasurement, *core.BaseError)
 	GetByDate(
 		ctx context.Context,
 		date *time.Time,
 		userId *uuid.UUID,
-	) (*bodyMeasurementTypes.BodyMeasurement, *core.BaseError)
+	) (*BodyMeasurement, *core.BaseError)
 	GetByRange(
 		ctx context.Context,
 		start *time.Time,
 		end *time.Time,
 		userId *uuid.UUID,
-	) ([]*bodyMeasurementTypes.BodyMeasurement, *core.BaseError)
+	) ([]BodyMeasurement, *core.BaseError)
 	GetById(
 		ctx context.Context,
 		id *uuid.UUID,
-	) (*bodyMeasurementTypes.BodyMeasurement, *core.BaseError)
-	Create(ctx context.Context, u *bodyMeasurementTypes.BodyMeasurement) *core.BaseError
+	) (BodyMeasurement, *core.BaseError)
+	Create(ctx context.Context, u BodyMeasurement) *core.BaseError
 	Delete(ctx context.Context, id *uuid.UUID) *core.BaseError
 }
 
@@ -64,7 +63,8 @@ func (r *BodyMeasurementRepository) GetByDate(
 ) (*bodyMeasurementTypes.BodyMeasurement, *core.BaseError) {
 	var measurement bodyMeasurementTypes.BodyMeasurement
 
-	result := r.db.WithContext(ctx).First(&measurement, "created_at = ? AND user_id = ?", date, userId)
+	result := r.db.WithContext(ctx).
+		First(&measurement, "created_at = ? AND user_id = ?", date, userId)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, BodyMeasurementNotFound(date.Format("2000-01-01"))
