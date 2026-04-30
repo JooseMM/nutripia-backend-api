@@ -24,15 +24,15 @@ type Passworder interface {
 	IsEqual(rawPassword string) bool
 }
 
-type Password struct {
+type password struct {
 	hash string
 }
 
-func (p *Password) String() string {
+func (p *password) String() string {
 	return p.hash
 }
 
-func (p *Password) IsEqual(rawPassword string) bool {
+func (p *password) IsEqual(rawPassword string) bool {
 	// 1. Split the string into its component parts
 	vals := strings.Split(p.hash, "$")
 	if len(vals) != 6 {
@@ -98,7 +98,7 @@ func PasswordFromDB(hash string) (Passworder, []string) {
 		return nil, []string{"Corrupted password comming from database"}
 	}
 
-	return &Password{
+	return &password{
 		hash: hash,
 	}, nil
 }
@@ -153,7 +153,7 @@ func NewPassword(p string) (Passworder, []string) {
 		return nil, errList
 	}
 
-	return &Password{hash}, nil
+	return &password{hash}, nil
 }
 
 func hashPassword(password string) (string, error) {

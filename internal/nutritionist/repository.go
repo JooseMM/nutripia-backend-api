@@ -84,8 +84,12 @@ type RepositoryManager interface {
 	Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError
 }
 
-func NewNutritionistRepository(db *gorm.DB) RepositoryManager {
-	return &Repository{db}
+func NewNutritionistRepository(db *gorm.DB) (RepositoryManager, error) {
+	if err := db.AutoMigrate(&entityDB{}); err != nil {
+		return nil, err
+	}
+
+	return &Repository{db}, nil
 }
 
 func (r *Repository) IsEmailTaken(
@@ -157,7 +161,7 @@ func (r *Repository) GetByEmailAddress(
 ) (Nutritionist, *core.BaseError) {
 	var user entityDB
 
-	result := r.db.WithContext(ctx).First(&user, "email_address = ?", emailAddress.String())
+	result := r.db.WithContext(ctx).First(&user, "email = ?", emailAddress.String())
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, UserNotFound(emailAddress.String())

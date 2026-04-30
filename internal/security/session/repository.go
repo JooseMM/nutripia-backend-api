@@ -11,13 +11,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type sessionDB struct {
+type entityDB struct {
 	id        uuid.UUID             `gorm:"type:uuid;primaryKey"`
-	token     string                `gorm:"column:session_hash;not null"`
+	token     string                `gorm:"column:token;not null"`
 	userId    uuid.UUID             `gorm:"type:uuid;index"`
 	role      valueobject.UserRoles `gorm:"type:varchar(20)"`
 	expiredAt time.Time             `gorm:"column:expired_at;index"`
 	createdAt time.Time
+}
+
+func (entityDB) TableName() string {
+	return "sessions"
 }
 
 type repo struct {
@@ -31,8 +35,12 @@ type Repository interface {
 	DeleteOne(ctx context.Context, sessionId valueobject.Identifier) *core.BaseError
 }
 
-func NewSessionRepository(db *gorm.DB) Repository {
-	return &repo{db}
+func NewSessionRepository(db *gorm.DB) (Repository, error) {
+	if err := db.AutoMigrate(&entityDB{}); err != nil {
+		return nil, err
+	}
+
+	return &repo{db}, nil
 }
 
 func (s *repo) GetByHash(
@@ -41,7 +49,7 @@ func (s *repo) GetByHash(
 ) (Sessioner, *core.BaseError) {
 	var session session
 
-	result := s.db.WithContext(ctx).Find(&session, "session_hash = ?", token.Hash())
+	result := s.db.WithContext(ctx).Find(&session, "token = ?", token.Hash())
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, SessionNotFound()

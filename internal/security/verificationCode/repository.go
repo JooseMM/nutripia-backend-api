@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// TODO: add metadata
 type entityDB struct {
 	id        uuid.UUID
 	token     string
@@ -39,15 +40,19 @@ func (e *entityDB) ToEntity() (*verificationToken, *core.BaseError) {
 	}
 
 	resp := verificationToken{
-		id:        valueobject.IdentifierFromDB(e.id),
+		id:        valueobject.IdentifierFromValue(e.id),
 		token:     token,
 		tokenType: e.tokenType,
-		userId:    valueobject.IdentifierFromDB(e.id),
+		userId:    valueobject.IdentifierFromValue(e.id),
 		createdAt: e.createdAt,
 		expiredAt: e.expiredAt,
 	}
 
 	return &resp, nil
+}
+
+func (entityDB) TableName() string {
+	return "verification_tokens"
 }
 
 type entityRepository struct {
@@ -66,8 +71,11 @@ type Repository interface {
 	Delete(ctx context.Context, userId valueobject.Identifier) *core.BaseError
 }
 
-func NewVerificationCodeRepository(db *gorm.DB) Repository {
-	return &entityRepository{db}
+func NewVerificationCodeRepository(db *gorm.DB) (Repository, error) {
+	if err := db.AutoMigrate(&entityDB{}); err != nil {
+		return nil, err
+	}
+	return &entityRepository{db}, nil
 }
 
 func (s *entityRepository) GetByToken(

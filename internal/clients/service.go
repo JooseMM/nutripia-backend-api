@@ -2,110 +2,92 @@ package clients
 
 import (
 	"context"
-	"time"
 
-	clientTypes "github.com/JooseMM/nutripia-backend-api/internal/clients/types"
-	"github.com/JooseMM/nutripia-backend-api/internal/clients/types/dtos"
+	clientDtos "github.com/JooseMM/nutripia-backend-api/internal/clients/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
-	"github.com/google/uuid"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
-type IClientService interface {
+type ClientManager interface {
 	CreateUser(
-		dto *clientDtos.CreateClientRequest,
-		nutritionistOwnerId *uuid.UUID,
 		ctx context.Context,
-	) (*uuid.UUID, *core.BaseError)
-	GetById(id *uuid.UUID, ctx context.Context) (*clientTypes.Client, *core.BaseError)
+		dto clientDtos.CreateClientRequest,
+		nutritionistOwnerId valueobject.Identifier,
+	) (valueobject.Identifier, *core.BaseError)
+	GetById(ctx context.Context, id valueobject.Identifier) (Client, *core.BaseError)
 	GetByNutritionist(
-		userId *uuid.UUID,
 		ctx context.Context,
-	) ([]*clientTypes.Client, *core.BaseError)
-	DeleteOne(id *uuid.UUID, ctx context.Context) *core.BaseError
-	UpdateIdentityInformation(
-		id *uuid.UUID,
-		userDto *clientDtos.UpdateClientRequest,
+		userId valueobject.Identifier,
+	) ([]Client, *core.BaseError)
+	Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError
+	Update(
 		ctx context.Context,
+		id valueobject.Identifier,
+		dto clientDtos.UpdateClientRequest,
 	) *core.BaseError
 }
 
-type UserService struct {
-	Repo IClientRepository
+type service struct {
+	Repo Repository
 }
 
-func NewClientService(repo IClientRepository) IClientService {
-	return &UserService{repo}
+func NewClientService(repo Repository) ClientManager {
+	return &service{repo}
 }
 
-func (u *UserService) CreateUser(
-	userDto *clientDtos.CreateClientRequest,
-	nutritionistOwnerId *uuid.UUID,
+func (u *service) CreateUser(
 	ctx context.Context,
-) (*uuid.UUID, *core.BaseError) {
-
-	foundEmailOwner, queryEmailErr := u.Repo.GetByEmailAddress(ctx, userDto.EmailAddress)
-	if queryEmailErr != nil && queryEmailErr.ErrorCode != string(CLIENT_NOT_FOUND) {
-		return nil, queryEmailErr
+	dto clientDtos.CreateClientRequest,
+	ownerId valueobject.Identifier,
+) (valueobject.Identifier, *core.BaseError) {
+	isFound, err := u.Repo.IsEmailTaken(ctx, dto.EmailAddress)
+	if err != nil {
+		return nil, err
 	}
-	if foundEmailOwner != nil {
-		return nil, UserEmailAlreadyExisting(userDto.EmailAddress)
-	}
-
-	now := time.Now()
-	user := &clientTypes.Client{
-		ID: uuid.New(),
-		ClientIdentity: clientTypes.ClientIdentity{
-			Firstname:           userDto.Firstname,
-			Lastname:            userDto.Lastname,
-			EmailAddress:        userDto.EmailAddress,
-			DateBirth:           userDto.BirthDate,
-			NutritionistOwnerId: *nutritionistOwnerId,
-		},
-		TrackingInformation: clientTypes.TrackingInformation{
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
+	if isFound {
+		return nil, UserEmailAlreadyExisting(dto.EmailAddress.String())
 	}
 
-	creationErr := u.Repo.Create(ctx, user)
+	client := FromDTO(dto, ownerId)
+
+	creationErr := u.Repo.Create(ctx, client)
 	if creationErr != nil {
 		return nil, creationErr
 	}
 
-	return &user.ID, nil
+	return client.Id(), nil
 }
 
-func (u *UserService) GetById(
-	id *uuid.UUID,
+func (u *service) GetById(
 	ctx context.Context,
-) (*clientTypes.Client, *core.BaseError) {
-
-	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
-	if unexpectedErr != nil {
-		return nil, unexpectedErr
+	id valueobject.Identifier,
+) (Client, *core.BaseError) {
+	client, err := u.Repo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
 	}
 
-	return foundUser, nil
+	return client, nil
 }
 
-func (u *UserService) GetByNutritionist(
-	userId *uuid.UUID,
+func (u *service) GetByNutritionist(
 	ctx context.Context,
-) ([]*clientTypes.Client, *core.BaseError) {
-	clientList, unexpectedErr := u.Repo.GetAllByNutritionist(userId, ctx)
+	userId valueobject.Identifier,
+) ([]Client, *core.BaseError) {
+	clientList, unexpectedErr := u.Repo.GetAllByNutritionist(ctx, userId)
 	if unexpectedErr != nil {
 		return nil, unexpectedErr
 	}
 	if clientList == nil {
-		return []*clientTypes.Client{}, nil
+		return []Client{}, nil
 	}
 
 	return clientList, nil
 }
 
-func (u *UserService) DeleteOne(
-	id *uuid.UUID,
+func (u *service) Delete(
 	ctx context.Context,
+	id valueobject.Identifier,
 ) *core.BaseError {
 	err := u.Repo.Delete(ctx, id)
 	if err != nil {
@@ -115,30 +97,24 @@ func (u *UserService) DeleteOne(
 	return nil
 }
 
-func (u *UserService) UpdateIdentityInformation(
-	id *uuid.UUID,
-	userDto *clientDtos.UpdateClientRequest,
+func (u *service) Update(
 	ctx context.Context,
+	id valueobject.Identifier,
+	dto clientDtos.UpdateClientRequest,
 ) *core.BaseError {
-	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
-	if unexpectedErr != nil {
-		return unexpectedErr
+	client, err := u.Repo.GetById(ctx, id)
+	if err != nil {
+		return err
 	}
 
-	foundEmailOwner, queryEmailErr := u.Repo.GetByEmailAddress(ctx, userDto.EmailAddress)
-	if queryEmailErr != nil && queryEmailErr.ErrorCode != string(CLIENT_NOT_FOUND) {
-		return queryEmailErr
+	isFound, err := u.Repo.IsEmailTaken(ctx, dto.EmailAddress)
+	if err != nil {
+		return err
 	}
-	if foundEmailOwner != nil && foundEmailOwner.ID != *id {
-		return UserEmailAlreadyExisting(userDto.EmailAddress)
+	if isFound {
+		return UserEmailAlreadyExisting(dto.EmailAddress.String())
 	}
 
-	foundUser.Firstname = userDto.Firstname
-	foundUser.Lastname = userDto.Lastname
-	foundUser.EmailAddress = userDto.EmailAddress
-	foundUser.DateBirth = userDto.BirthDate
-
-	foundUser.UpdatedAt = time.Now()
-
-	return u.Repo.Update(ctx, foundUser)
+	client.Update(dto)
+	return u.Repo.Update(ctx, client)
 }

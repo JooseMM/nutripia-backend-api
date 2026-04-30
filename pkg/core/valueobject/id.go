@@ -37,7 +37,7 @@ func IdentifierFromString(raw string) (Identifier, *core.BaseError) {
 	return &Id{key: uuid}, nil
 }
 
-func IdentifierFromDB(id uuid.UUID) Identifier {
+func IdentifierFromValue(id uuid.UUID) Identifier {
 	return &Id{key: id}
 }
 

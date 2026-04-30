@@ -11,7 +11,7 @@ type RawLoginRequest struct {
 	Password     string `json:"password"`
 }
 
-func (r *RawLoginRequest) toValueObject() (*LoginRequest, *core.BaseError) {
+func (r *RawLoginRequest) ToValueObject() (*LoginRequest, *core.BaseError) {
 	var errList []string
 	email, err := valueobject.NewEmailAddress(r.EmailAddress)
 	errList = append(errList, err...)

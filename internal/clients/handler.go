@@ -1,12 +1,11 @@
 package clients
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/JooseMM/nutripia-backend-api/internal/clients/types/dtos"
+	clientDtos "github.com/JooseMM/nutripia-backend-api/internal/clients/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 	"github.com/google/uuid"
 )
@@ -14,7 +13,7 @@ import (
 const UserIdKey = "userId"
 const RoleIdKey = "roleId"
 
-type IClientHandler interface {
+type ClientHandler interface {
 	CreateClient(w http.ResponseWriter, r *http.Request)
 	GetClientById(w http.ResponseWriter, r *http.Request)
 	GetClientByNutritionist(w http.ResponseWriter, r *http.Request)
@@ -22,250 +21,148 @@ type IClientHandler interface {
 	UpdateClientById(w http.ResponseWriter, r *http.Request)
 }
 
-type ClientHandler struct {
-	service IClientService
+type handler struct {
+	service ClientManager
 }
 
-func NewClientHandler(service IClientService) IClientHandler {
-	return &ClientHandler{service}
+func NewClientHandler(service ClientManager) ClientHandler {
+	return &handler{service}
 }
 
-func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
+func (h *handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var dto clientDtos.CreateClientRequest
 
-	err := json.NewDecoder(r.Body).Decode(&dto)
-	if err != nil {
-		responseErr := core.ValidationError([]string{err.Error()})
+	dto, parseErr := core.DecodeJSON[clientDtos.RawCreateClientRequest](w, r)
+	if parseErr != nil {
+		responseErr := core.ValidationError(parseErr)
 		response.WriteJSON(w, responseErr.StatusCode, responseErr)
 		return
 	}
 
-	if validationErr := dto.Validate(); validationErr != nil {
-		response.WriteJSON(w, validationErr.StatusCode, validationErr)
-		return
-	}
-
-	rawId := r.Context().Value(UserIdKey)
-	userId, ok := rawId.(uuid.UUID)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	createdId, failure := h.service.CreateUser(&dto, &userId, r.Context())
-	if failure != nil {
-		response.WriteJSON(w, failure.StatusCode, failure)
-		return
-	}
-
-	idStr := createdId.String()
-	apiResponse := &response.ApiResponse[string]{
-		Success: true,
-		Data:    &idStr,
-	}
-	response.WriteJSON(w, http.StatusCreated, apiResponse)
-}
-
-func (h *ClientHandler) GetClientByNutritionist(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	rawId := r.Context().Value(UserIdKey)
-	userId, ok := rawId.(uuid.UUID)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	userList, err := h.service.GetByNutritionist(&userId, r.Context())
+	payload, err := dto.ToValueObject()
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	dtoList := []*clientDtos.ClientDto{}
-	for _, v := range userList {
-		dtoList = append(dtoList, &clientDtos.ClientDto{
-			ID:           v.ID,
-			Firstname:    v.Firstname,
-			Lastname:     v.Lastname,
-			EmailAddress: v.EmailAddress,
-			BirthDate:    v.DateBirth,
-		})
+	rawUserId, ok := r.Context().Value(UserIdKey).(uuid.UUID)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
 
-	apiResponse := &response.ApiResponse[[]*clientDtos.ClientDto]{
+	id := valueobject.IdentifierFromValue(rawUserId)
+
+	createdId, failure := h.service.CreateUser(r.Context(), *payload, id)
+	if failure != nil {
+		response.WriteJSON(w, failure.StatusCode, failure)
+		return
+	}
+
+	apiResponse := &response.ApiResponse[string]{
 		Success: true,
-		Data:    &dtoList,
+		Data:    createdId.String(),
+	}
+	response.WriteJSON(w, http.StatusCreated, apiResponse)
+}
+
+func (h *handler) GetClientByNutritionist(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	rawUserId, ok := r.Context().Value(UserIdKey).(uuid.UUID)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	id := valueobject.IdentifierFromValue(rawUserId)
+
+	clientList, err := h.service.GetByNutritionist(r.Context(), id)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+
+	dtoList := []clientDtos.ClientDto{}
+	for _, c := range clientList {
+		dtoList = append(dtoList, c.ToDTO())
+	}
+
+	apiResponse := &response.ApiResponse[[]clientDtos.ClientDto]{
+		Success: true,
+		Data:    dtoList,
 	}
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *ClientHandler) GetClientById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	rawId := r.PathValue("id")
 
-	id, parseErr := uuid.Parse(rawId)
-	if parseErr != nil {
-		responseErr := core.ValidationError(
-			[]string{"The identifier provided in the URL path is not a valid UUID format."},
-		)
-		jsonResponse, jsonErr := json.Marshal(responseErr)
-		if jsonErr != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		w.WriteHeader(int(responseErr.StatusCode))
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonResponse)
+	id, err := valueobject.IdentifierFromString(rawId)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	user, err := h.service.GetById(&id, r.Context())
+	client, err := h.service.GetById(r.Context(), id)
 	if err != nil {
-		errResponse, e := json.Marshal(err)
-		if e != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-		w.WriteHeader(int(err.StatusCode))
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(errResponse)
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
 	apiResponse := &response.ApiResponse[clientDtos.ClientDto]{
 		Success: true,
-		Data: &clientDtos.ClientDto{
-			ID:           user.ID,
-			Firstname:    user.Firstname,
-			Lastname:     user.Lastname,
-			EmailAddress: user.EmailAddress,
-			BirthDate:    user.DateBirth,
-		},
+		Data:    client.ToDTO(),
 	}
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *ClientHandler) DeleteClientById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) DeleteClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	rawId := r.PathValue("id")
 
-	id, parseErr := uuid.Parse(rawId)
+	id, parseErr := valueobject.IdentifierFromString(rawId)
 	if parseErr != nil {
-		responseErr := core.ValidationError(
-			[]string{"The identifier provided in the URL path is not a valid UUID format."},
-		)
-		jsonResponse, jsonErr := json.Marshal(responseErr)
-		if jsonErr != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		w.WriteHeader(int(responseErr.StatusCode))
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonResponse)
+		response.WriteJSON(w, parseErr.StatusCode, parseErr)
 		return
 	}
 
-	err := h.service.DeleteOne(&id, r.Context())
+	err := h.service.Delete(r.Context(), id)
 	if err != nil {
-		errResponse, e := json.Marshal(err)
-		if e != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-		w.WriteHeader(int(err.StatusCode))
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(errResponse)
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *ClientHandler) UpdateClientById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) UpdateClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	rawId := r.PathValue("id")
-	var dto clientDtos.UpdateClientRequest
 
-	id, parseErr := uuid.Parse(rawId)
+	id, parseErr := valueobject.IdentifierFromString(rawId)
 	if parseErr != nil {
-		responseErr := core.ValidationError(
-			[]string{"The identifier provided in the URL path is not a valid UUID format."},
-		)
-		jsonResponse, jsonErr := json.Marshal(responseErr)
-		if jsonErr != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		w.WriteHeader(int(responseErr.StatusCode))
-		w.Write(jsonResponse)
+		response.WriteJSON(w, parseErr.StatusCode, parseErr)
 		return
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&dto)
+	rawPayload, decodeErr := core.DecodeJSON[clientDtos.RawUpdateClientRequest](w, r)
+	if decodeErr != nil {
+		responseErr := core.ValidationError(decodeErr)
+		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+		return
+	}
+
+	payload, err := rawPayload.ToValueObject()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Bad request: %s", err.Error()), http.StatusBadRequest)
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	validationErr := dto.Validate()
-	if validationErr != nil {
-		json, jsonErr := json.Marshal(validationErr)
-		if jsonErr != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
-		return
-	}
-
-	failure := h.service.UpdateIdentityInformation(&id, &dto, r.Context())
-	if failure != nil {
-		errJson, err := json.Marshal(failure)
-		if err != nil {
-			http.Error(
-				w,
-				"Error trying to serialize a response",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(int(failure.StatusCode))
-		w.Write(errJson)
+	err = h.service.Update(r.Context(), id, *payload)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
