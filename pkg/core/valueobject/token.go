@@ -4,19 +4,20 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"math/big"
-	"unicode/utf8"
 
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
 const emailConfirmationTokenLength = 6
 const passwordResetTokenLength = 16
+const sessionTokenLength = 32
 
 type TokenTypeEnum int
 
 const (
 	EmailConfirmation TokenTypeEnum = iota
 	PasswordReset
+	Session
 )
 
 type Tokenizer interface {
@@ -30,13 +31,38 @@ type Token struct {
 }
 
 func PasswordResetTokenFromString(raw string) (Tokenizer, *core.BaseError) {
-	if utf8.RuneCountInString(raw) < passwordResetTokenLength {
+	if len(raw) < passwordResetTokenLength {
 		return nil, core.UnexpectedError("Token: wrong format")
 	}
 
 	return &Token{
 		value:     raw,
 		tokenType: PasswordReset,
+	}, nil
+}
+
+func NewSessionToken() (Tokenizer, *core.BaseError) {
+	b := make([]byte, sessionTokenLength)
+	_, err := rand.Read(b)
+	if err != nil {
+		return nil, core.UnexpectedError(err.Error())
+	}
+
+	token := base64.RawURLEncoding.EncodeToString(b)
+	return &Token{
+		value:     token,
+		tokenType: Session,
+	}, nil
+}
+
+func SessionTokenFromString(raw string) (Tokenizer, *core.BaseError) {
+	if len(raw) < sessionTokenLength {
+		return nil, core.UnexpectedError("Token: wrong format")
+	}
+
+	return &Token{
+		value:     raw,
+		tokenType: Session,
 	}, nil
 }
 
@@ -75,7 +101,7 @@ func NewEmailConfirmationToken() (Tokenizer, *core.BaseError) {
 }
 
 func EmailConfirmationTokenFromString(raw string) (Tokenizer, *core.BaseError) {
-	if utf8.RuneCountInString(raw) < emailConfirmationTokenLength {
+	if len(raw) < emailConfirmationTokenLength {
 		return nil, core.UnexpectedError("Token: wrong format")
 	}
 

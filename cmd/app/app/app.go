@@ -5,9 +5,7 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/internal/clients"
 	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist"
 	"github.com/JooseMM/nutripia-backend-api/internal/security/authentication"
-	"github.com/JooseMM/nutripia-backend-api/internal/security/authorization"
 	"github.com/JooseMM/nutripia-backend-api/internal/security/session"
-	"github.com/JooseMM/nutripia-backend-api/internal/security/verificationCode"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +14,6 @@ type App struct {
 	ClientHandler            clients.IClientHandler
 	MeasurementHandler       bodyMeasurement.IBodyMeasurementHandler
 	AuthenticationHandler    authentication.IAuthenticationHandler
-	AuthorizationMiddlewares authorization.IAuthorizationMiddlewares
 }
 
 func NewApp(db *gorm.DB) *App {

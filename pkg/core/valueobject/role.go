@@ -1,4 +1,4 @@
-package authenticationTypes
+package valueobject
 
 type UserRoles int
 

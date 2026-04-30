@@ -2,97 +2,76 @@ package session
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
-	"time"
 
-	authenticationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types"
-	sessionTypes "github.com/JooseMM/nutripia-backend-api/internal/security/session/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
-	"github.com/google/uuid"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
 type SessionService struct {
-	Repo ISessionRepository
+	Repo Repository
 }
 
-type ISessionService interface {
+type SessionManger interface {
 	CreateSession(
-		userId *uuid.UUID,
-		role *authenticationTypes.UserRoles,
-		ctx *context.Context,
-	) (*string, *core.BaseError)
-	VerifySession(sessionHash *string, ctx *context.Context) (*sessionTypes.Session, *core.BaseError)
-	DeleteSession(sessionId *uuid.UUID, ctx *context.Context) *core.BaseError
-	DeleteAllSessionByUserId(userId *uuid.UUID, ctx *context.Context) *core.BaseError
+		ctx context.Context,
+		userId valueobject.Identifier,
+		role valueobject.UserRoles,
+	) (valueobject.Tokenizer, *core.BaseError)
+	VerifySession(
+		ctx context.Context,
+		token valueobject.Tokenizer,
+	) (Sessioner, *core.BaseError)
+	DeleteSession(ctx context.Context, sessionId valueobject.Identifier) *core.BaseError
+	DeleteAllSessionByUserId(ctx context.Context, userId valueobject.Identifier) *core.BaseError
 }
 
-func NewSessionService(repo ISessionRepository) ISessionService {
+func NewSessionService(repo Repository) SessionManger {
 	return &SessionService{repo}
 }
 
 func (s *SessionService) CreateSession(
-	userId *uuid.UUID,
-	role *authenticationTypes.UserRoles,
-	ctx *context.Context,
-) (*string, *core.BaseError) {
-	token, tokenErr := s.generateToken()
-	if tokenErr != nil {
-		return nil, core.UnexpectedError(tokenErr.Error())
-	}
-
-	now := time.Now().UTC()
-	session := &sessionTypes.Session{
-		ID:          uuid.New(),
-		SessionHash: core.HashToken(token),
-		Role:        *role,
-		UserId:      *userId,
-		ExpiredAt:   now.Add(72 * time.Hour),
-	}
-
-	if err := s.Repo.CreateSession(*ctx, *session); err != nil {
+	ctx context.Context,
+	userId valueobject.Identifier,
+	role valueobject.UserRoles,
+) (valueobject.Tokenizer, *core.BaseError) {
+	session, err := NewSession(userId, role)
+	if err != nil {
 		return nil, err
 	}
 
-	return token, nil
+	if err := s.Repo.CreateSession(ctx, session); err != nil {
+		return nil, err
+	}
+
+	return session.Token(), nil
 }
 
 func (s *SessionService) VerifySession(
-	sessionToken *string,
-	ctx *context.Context,
-) (*sessionTypes.Session, *core.BaseError) {
-	hash := core.HashToken(sessionToken)
-
-	session, sessionErr := s.Repo.GetByHash(*ctx, &hash)
+	ctx context.Context,
+	token valueobject.Tokenizer,
+) (Sessioner, *core.BaseError) {
+	session, sessionErr := s.Repo.GetByHash(ctx, token)
 	if sessionErr != nil {
 		return nil, sessionErr
 	}
 
-	if session.ExpiredAt.Before(time.Now().UTC()) {
+	if session.IsExpired() {
 		return nil, SessionExpired()
 	}
 
 	return session, nil
 }
 
-func (s *SessionService) DeleteSession(sessionId *uuid.UUID, ctx *context.Context) *core.BaseError {
-	return s.Repo.DeleteOne(*ctx, sessionId)
+func (s *SessionService) DeleteSession(
+	ctx context.Context,
+	sessionId valueobject.Identifier,
+) *core.BaseError {
+	return s.Repo.DeleteOne(ctx, sessionId)
 }
 
 func (s *SessionService) DeleteAllSessionByUserId(
-	userId *uuid.UUID,
-	ctx *context.Context,
+	ctx context.Context,
+	userId valueobject.Identifier,
 ) *core.BaseError {
-	return s.Repo.DeleteByUserId(*ctx, userId)
-}
-
-func (s *SessionService) generateToken() (*string, error) {
-	b := make([]byte, 32)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
-	}
-
-	token := base64.RawURLEncoding.EncodeToString(b)
-	return &token, nil
+	return s.Repo.DeleteByUserId(ctx, userId)
 }

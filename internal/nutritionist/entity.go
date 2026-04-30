@@ -12,9 +12,13 @@ type Nutritionist interface {
 	Name() valueobject.Namer
 	EmailAddress() valueobject.Emailer
 	BirthDate() valueobject.BirthDater
+
 	Password() valueobject.Passworder
+	UpdatePassword(password valueobject.Passworder)
+
 	RUT() valueobject.RUTer
 	IsEmailConfirmed() bool
+	MarkAsEmailAddressConfirmed()
 
 	Update(data nutritionistDtos.UpdateNutritionist)
 	ToDTO() nutritionistDtos.Nutritionist
@@ -48,6 +52,11 @@ func (e *Entity) Password() valueobject.Passworder {
 	return e.password
 }
 
+func (e *Entity) UpdatePassword(password valueobject.Passworder) {
+	e.password = password
+	e.updatedAt = time.Now().UTC()
+}
+
 func (e *Entity) RUT() valueobject.RUTer {
 	return e.rut
 }
@@ -58,6 +67,11 @@ func (e *Entity) BirthDate() valueobject.BirthDater {
 
 func (e *Entity) IsEmailConfirmed() bool {
 	return e.isEmailConfirmed
+}
+
+func (e *Entity) MarkAsEmailAddressConfirmed() {
+	e.isEmailConfirmed = true
+	e.updatedAt = time.Now().UTC()
 }
 
 func (e *Entity) Update(update nutritionistDtos.UpdateNutritionist) {

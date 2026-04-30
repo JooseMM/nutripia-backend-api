@@ -5,42 +5,43 @@ import (
 	"errors"
 	"time"
 
-	authenticationTypes "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/types"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-type SessionDB struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	SessionHash string    `gorm:"column:session_hash;not null"`
-	UserId      uuid.UUID `gorm:"type:uuid;index"`
-	Role        authenticationTypes.UserRoles
-	ExpiredAt   time.Time `gorm:"column:expired_at"`
+type sessionDB struct {
+	id        uuid.UUID             `gorm:"type:uuid;primaryKey"`
+	token     string                `gorm:"column:session_hash;not null"`
+	userId    uuid.UUID             `gorm:"type:uuid;index"`
+	role      valueobject.UserRoles `gorm:"type:varchar(20)"`
+	expiredAt time.Time             `gorm:"column:expired_at;index"`
+	createdAt time.Time
 }
 
-type SessionRepository struct {
+type repo struct {
 	db *gorm.DB
 }
 
-type ISessionRepository interface {
-	GetByHash(ctx context.Context, hash *string) (*Session, *core.BaseError)
-	CreateSession(ctx context.Context, session Session) *core.BaseError
-	DeleteByUserId(ctx context.Context, userId *uuid.UUID) *core.BaseError
-	DeleteOne(ctx context.Context, sessionId *uuid.UUID) *core.BaseError
+type Repository interface {
+	GetByHash(ctx context.Context, token valueobject.Tokenizer) (Sessioner, *core.BaseError)
+	CreateSession(ctx context.Context, session Sessioner) *core.BaseError
+	DeleteByUserId(ctx context.Context, userId valueobject.Identifier) *core.BaseError
+	DeleteOne(ctx context.Context, sessionId valueobject.Identifier) *core.BaseError
 }
 
-func NewSessionRepository(db *gorm.DB) ISessionRepository {
-	return &SessionRepository{db}
+func NewSessionRepository(db *gorm.DB) Repository {
+	return &repo{db}
 }
 
-func (s *SessionRepository) GetByHash(
+func (s *repo) GetByHash(
 	ctx context.Context,
-	sessionHash *string,
-) (*Session, *core.BaseError) {
-	var session Session
+	token valueobject.Tokenizer,
+) (Sessioner, *core.BaseError) {
+	var session session
 
-	result := s.db.WithContext(ctx).Find(&session, "session_hash = ?", sessionHash)
+	result := s.db.WithContext(ctx).Find(&session, "session_hash = ?", token.Hash())
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, SessionNotFound()
@@ -52,9 +53,9 @@ func (s *SessionRepository) GetByHash(
 	return &session, nil
 }
 
-func (s *SessionRepository) CreateSession(
+func (s *repo) CreateSession(
 	ctx context.Context,
-	session Session,
+	session Sessioner,
 ) *core.BaseError {
 	result := s.db.WithContext(ctx).Create(session)
 	if result.Error != nil {
@@ -63,11 +64,11 @@ func (s *SessionRepository) CreateSession(
 	return nil
 }
 
-func (s *SessionRepository) DeleteByUserId(
+func (s *repo) DeleteByUserId(
 	ctx context.Context,
-	userId *uuid.UUID,
+	userId valueobject.Identifier,
 ) *core.BaseError {
-	result := s.db.WithContext(ctx).Where("user_id = ?", userId).Delete(&Session{})
+	result := s.db.WithContext(ctx).Where("user_id = ?", userId.Key()).Delete(&session{})
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
@@ -79,11 +80,11 @@ func (s *SessionRepository) DeleteByUserId(
 	return nil
 }
 
-func (s *SessionRepository) DeleteOne(
+func (s *repo) DeleteOne(
 	ctx context.Context,
-	sessionId *uuid.UUID,
+	sessionId valueobject.Identifier,
 ) *core.BaseError {
-	result := s.db.WithContext(ctx).Delete(&Session{}, sessionId)
+	result := s.db.WithContext(ctx).Delete(&session{}, sessionId.Key())
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}

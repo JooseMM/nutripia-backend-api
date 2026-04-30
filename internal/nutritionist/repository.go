@@ -12,51 +12,52 @@ import (
 )
 
 type entityDB struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Firstname string    `gorm:"column:firstname;not null"`
-	Lastname  string    `gorm:"column:lastname;not null"`
-	Email     string    `gorm:"column:email;uniqueIndex;not null"`
-	BirthDate time.Time `gorm:"column:birth_date"`
-	Password  string    `gorm:"column:password;not null"`
-	RUT       string    `gorm:"column:rut;uniqueIndex;not null"`
-	CreatedAt time.Time `gorm:"column:created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at"`
+	id               uuid.UUID `gorm:"type:uuid;primaryKey"`
+	firstname        string    `gorm:"column:firstname;not null"`
+	lastname         string    `gorm:"column:lastname;not null"`
+	isEmailConfirmed bool      `gorm:"column:is_email_confirmed;not null"`
+	email            string    `gorm:"column:email;uniqueIndex;not null"`
+	birthDate        time.Time `gorm:"column:birth_date"`
+	password         string    `gorm:"column:password;not null"`
+	rut              string    `gorm:"column:rut;uniqueIndex;not null"`
+	createdAt        time.Time `gorm:"column:created_at"`
+	updatedAt        time.Time `gorm:"column:updated_at"`
 }
 
 func fromEntity(entity Nutritionist) entityDB {
 	return entityDB{
-		ID:        entity.Id().Key(),
-		Firstname: entity.Name().Firstname(),
-		Lastname:  entity.Name().Lastname(),
-		Email:     entity.EmailAddress().String(),
-		BirthDate: entity.BirthDate().Date(),
-		Password:  entity.Password().String(),
+		id:        entity.Id().Key(),
+		firstname: entity.Name().Firstname(),
+		lastname:  entity.Name().Lastname(),
+		email:     entity.EmailAddress().String(),
+		birthDate: entity.BirthDate().Date(),
+		password:  entity.Password().String(),
 	}
 }
 
 func (e *entityDB) toEntity() (Nutritionist, *core.BaseError) {
 	var errList []string
 
-	name, err := valueobject.NewName(e.Firstname, e.Lastname)
+	name, err := valueobject.NewName(e.firstname, e.lastname)
 	errList = append(errList, err...)
 
-	emailAddress, err := valueobject.NewEmailAddress(e.Email)
+	emailAddress, err := valueobject.NewEmailAddress(e.email)
 	errList = append(errList, err...)
 
-	birthDate, err := valueobject.NewBirthDate(e.BirthDate)
+	birthDate, err := valueobject.NewBirthDate(e.birthDate)
 	errList = append(errList, err...)
 
-	password, err := valueobject.PasswordFromDB(e.Password)
+	password, err := valueobject.PasswordFromDB(e.password)
 	errList = append(errList, err...)
 
-	rut, err := valueobject.NewRUT(e.RUT)
+	rut, err := valueobject.NewRUT(e.rut)
 	errList = append(errList, err...)
 
 	if len(errList) > 0 {
 		return nil, core.ValidationError(errList)
 	}
 
-	return NewEntity(name, emailAddress, birthDate, password, rut), nil
+	return NewEntity(name, emailAddress, e.isEmailConfirmed, birthDate, password, rut), nil
 }
 
 func (entityDB) TableName() string {
@@ -70,6 +71,10 @@ type Repository struct {
 type RepositoryManager interface {
 	GetAll(ctx context.Context) ([]Nutritionist, *core.BaseError)
 	GetById(ctx context.Context, id valueobject.Identifier) (Nutritionist, *core.BaseError)
+	IsEmailTaken(
+		ctx context.Context,
+		emalAddress valueobject.Emailer,
+	) (bool, *core.BaseError)
 	GetByEmailAddress(
 		ctx context.Context,
 		emalAddress valueobject.Emailer,
@@ -81,6 +86,25 @@ type RepositoryManager interface {
 
 func NewNutritionistRepository(db *gorm.DB) RepositoryManager {
 	return &Repository{db}
+}
+
+func (r *Repository) IsEmailTaken(
+	ctx context.Context,
+	emalAddress valueobject.Emailer,
+) (bool, *core.BaseError) {
+	var exists bool
+
+	err := r.db.WithContext(ctx).
+		Model(&entityDB{}).
+		Select("count(*) > 0").
+		Where("email = ?", emalAddress.String()).
+		Find(&exists).
+		Error
+
+	if err != nil {
+		return false, core.UnexpectedError(err.Error())
+	}
+	return exists, nil
 }
 
 func (r *Repository) GetAll(
