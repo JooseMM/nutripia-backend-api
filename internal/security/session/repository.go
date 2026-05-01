@@ -17,7 +17,7 @@ type entityDB struct {
 	userId    uuid.UUID             `gorm:"type:uuid;index"`
 	role      valueobject.UserRoles `gorm:"type:varchar(20)"`
 	expiredAt time.Time             `gorm:"column:expired_at;index"`
-	createdAt time.Time
+	createdAt time.Time             `gorm:"column:created_at"`
 }
 
 func (entityDB) TableName() string {

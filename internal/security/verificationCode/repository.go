@@ -11,14 +11,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO: add metadata
 type entityDB struct {
-	id        uuid.UUID
-	token     string
-	userId    uuid.UUID
-	tokenType valueobject.TokenTypeEnum
-	createdAt time.Time
-	expiredAt time.Time
+	id        uuid.UUID                 `gorm:"type:uuid;primaryKey"`
+	token     string                    `gorm:"type:varchar(255);not null;index"`
+	userId    uuid.UUID                 `gorm:"type:uuid;not null;index"`
+	tokenType valueobject.TokenTypeEnum `gorm:"type:varchar(50);not null"`
+	createdAt time.Time                 `gorm:"not null"`
+	expiredAt time.Time                 `gorm:"not null;index"`
 }
 
 func (e *entityDB) ToEntity() (*verificationToken, *core.BaseError) {
@@ -39,13 +38,25 @@ func (e *entityDB) ToEntity() (*verificationToken, *core.BaseError) {
 		token = t
 	}
 
+	created, err := valueobject.NewTrackerFromTime(&e.createdAt)
+	if err != nil {
+		e := core.CorrupetedDatabase(err)
+		return nil, e
+	}
+
+	expired, err := valueobject.NewTrackerFromTime(&e.expiredAt)
+	if err != nil {
+		e := core.CorrupetedDatabase(err)
+		return nil, e
+	}
+
 	resp := verificationToken{
 		id:        valueobject.IdentifierFromValue(e.id),
 		token:     token,
 		tokenType: e.tokenType,
 		userId:    valueobject.IdentifierFromValue(e.id),
-		createdAt: e.createdAt,
-		expiredAt: e.expiredAt,
+		createdAt: created,
+		expiredAt: expired,
 	}
 
 	return &resp, nil

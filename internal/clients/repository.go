@@ -49,6 +49,16 @@ func (d *entityDB) toEntity() (Client, *core.BaseError) {
 		errList = append(errList, err...)
 	}
 
+	created, err := valueobject.NewTrackerFromTime(&d.createdAt)
+	if err != nil {
+		errList = append(errList, err...)
+	}
+
+	updated, err := valueobject.NewTrackerFromTime(&d.updatedAt)
+	if err != nil {
+		errList = append(errList, err...)
+	}
+
 	if len(errList) > 0 {
 		return nil, core.CorrupetedDatabase(errList)
 	}
@@ -60,8 +70,8 @@ func (d *entityDB) toEntity() (Client, *core.BaseError) {
 		birthDate: birthDate,
 		ownerId:   ownerId,
 
-		createdAt: d.createdAt,
-		updateAt:  d.updatedAt,
+		createdAt: created,
+		updateAt:  updated,
 	}, nil
 }
 

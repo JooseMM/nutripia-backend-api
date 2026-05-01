@@ -2,7 +2,9 @@ package valueobject
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"math/big"
 
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
@@ -116,5 +118,6 @@ func (t *Token) String() string {
 }
 
 func (t *Token) Hash() string {
-	return core.HashToken(&t.value)
+	hash := sha256.Sum256([]byte(t.value))
+	return hex.EncodeToString(hash[:])
 }

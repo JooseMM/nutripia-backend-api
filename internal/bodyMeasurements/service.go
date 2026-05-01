@@ -71,10 +71,10 @@ func (u *service) GetById(
 
 func (u *service) GetByRange(
 	ctx context.Context,
-	userId valueobject.Identifier,
+	clientId valueobject.Identifier,
 	rageDate bodyMeasurementDtos.RangeDate,
 ) ([]BodyMeasurement, *core.BaseError) {
-	bm, err := u.Repo.GetByRange(ctx, start, end, userId)
+	bm, err := u.Repo.GetByRange(ctx, rageDate, clientId)
 	if err != nil {
 		return nil, err
 	}
