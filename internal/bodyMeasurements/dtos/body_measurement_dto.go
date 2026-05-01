@@ -7,6 +7,7 @@ import (
 
 type BodyMeasurementDto struct {
 	Id            uuid.UUID `json:"id"`
+	ClientId  uuid.UUID `json:"clientId"`
 	Mass          float64   `json:"mass"`
 	Stature       float64   `json:"stature"`
 	SittingHeight float64   `json:"sittingHeight"`
@@ -38,5 +39,4 @@ type BodyMeasurementDto struct {
 	Ankle      float64 `json:"ankle"`
 
 	CreatedAt time.Time `json:"createdAt"`
-	ClientId  uuid.UUID `json:"clientId"`
 }

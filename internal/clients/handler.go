@@ -7,7 +7,6 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/JooseMM/nutripia-backend-api/pkg/request"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
-	"github.com/google/uuid"
 )
 
 const UserIdKey = "userId"
@@ -44,13 +43,11 @@ func (h *handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rawUserId, ok := r.Context().Value(UserIdKey).(uuid.UUID)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+	id, err := valueobject.IdentifierFromString(r.PathValue("nutritionistId"))
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
-
-	id := valueobject.IdentifierFromValue(rawUserId)
 
 	createdId, failure := h.service.CreateUser(r.Context(), *payload, id)
 	if failure != nil {
@@ -68,12 +65,11 @@ func (h *handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 func (h *handler) GetClientByNutritionist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	rawUserId, ok := r.Context().Value(UserIdKey).(uuid.UUID)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+	id, err := valueobject.IdentifierFromString(r.PathValue("nutritionistId"))
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
-	id := valueobject.IdentifierFromValue(rawUserId)
 
 	clientList, err := h.service.GetByNutritionist(r.Context(), id)
 	if err != nil {
@@ -95,9 +91,8 @@ func (h *handler) GetClientByNutritionist(w http.ResponseWriter, r *http.Request
 
 func (h *handler) GetClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	rawId := r.PathValue("id")
 
-	id, err := valueobject.IdentifierFromString(rawId)
+	id, err := valueobject.IdentifierFromString(r.PathValue("clientId"))
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
@@ -118,9 +113,8 @@ func (h *handler) GetClientById(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) DeleteClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	rawId := r.PathValue("id")
 
-	id, parseErr := valueobject.IdentifierFromString(rawId)
+	id, parseErr := valueobject.IdentifierFromString(r.PathValue("clientId"))
 	if parseErr != nil {
 		response.WriteJSON(w, parseErr.StatusCode, parseErr)
 		return
@@ -138,9 +132,7 @@ func (h *handler) DeleteClientById(w http.ResponseWriter, r *http.Request) {
 func (h *handler) UpdateClientById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	rawId := r.PathValue("id")
-
-	id, parseErr := valueobject.IdentifierFromString(rawId)
+	id, parseErr := valueobject.IdentifierFromString(r.PathValue("clientId"))
 	if parseErr != nil {
 		response.WriteJSON(w, parseErr.StatusCode, parseErr)
 		return

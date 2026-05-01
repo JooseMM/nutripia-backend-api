@@ -1,8 +1,6 @@
 # TODO
 
-- [ x ] Implement get all clients
-- [ x ] Implement email notification with gmail api
-- [ x ] Implement forgot password
+- [   ] Require the token when sending the new password 
 - [   ] Implement max attempts for changing password, resending email verifications
 
 # Endpoints

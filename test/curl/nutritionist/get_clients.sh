@@ -1,3 +1,2 @@
-curl -v http://localhost:3000/clients/ \
-  -H "Content-Type: application/json" \
-  -H "x-session-token: $1" | jq
+curl -v http://localhost:3000/clients/$1 \
+  -H "Content-Type: application/json" | jq

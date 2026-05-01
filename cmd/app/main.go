@@ -27,10 +27,6 @@ func main() {
 	protectedMux := core.RecoveryMiddleware(mux)
 	app := app.NewApp(db)
 
-	/* TODO: admin routes
-	mux.HandleFunc("DELETE /nutritionist/{id}", app.NutritionistHandler.DeleteNutritionistById)
-	*/
-
 	/* Authentication */
 	mux.HandleFunc(
 		"POST /nutritionist/register",
@@ -57,6 +53,7 @@ func main() {
 		"POST /nutritionist/complete-reset-password",
 		app.AuthenticationHandler.CompleteResetPassword,
 	)
+
 	mux.HandleFunc(
 		"POST /nutritionist/confirm-email",
 		app.AuthenticationHandler.ConfirmNutritionistEmail,
@@ -69,28 +66,28 @@ func main() {
 
 	/* Clients */
 	mux.HandleFunc(
-		"POST /nutritionist/client",
+		"POST /nutritionist/client/{nutritionistId}",
 		app.ClientHandler.CreateClient,
 	)
 
-	mux.HandleFunc("GET /clients/",
+	mux.HandleFunc("GET /clients/{nutritionistId}",
 		app.ClientHandler.GetClientByNutritionist,
 	)
 
-	mux.HandleFunc("GET /client/{id}",
+	mux.HandleFunc("GET /client/{clientId}",
 		app.ClientHandler.GetClientById,
 	)
 
-	mux.HandleFunc("DELETE /nutritionist/client/{id}",
+	mux.HandleFunc("DELETE /nutritionist/client/{clientId}",
 		app.ClientHandler.DeleteClientById,
 	)
 
-	mux.HandleFunc("PUT /nutritionist/client",
+	mux.HandleFunc("PUT /nutritionist/client/{clientId}",
 		app.ClientHandler.UpdateClientById,
 	)
 
 	/* Measurements */
-	mux.HandleFunc("POST /body-measurements",
+	mux.HandleFunc("POST /body-measurements/{clientId}",
 		app.MeasurementHandler.Create,
 	)
 	mux.HandleFunc("GET /body-measurements/{id}",

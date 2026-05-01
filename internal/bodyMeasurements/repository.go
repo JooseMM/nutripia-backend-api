@@ -14,6 +14,8 @@ import (
 
 type bodyMeasurementDB struct {
 	Id            uuid.UUID `gorm:"type:uuid;primaryKey"`
+	ClientId uuid.UUID `gorm:"type:uuid;not null;index"`
+
 	Mass          float64   `gorm:"type:decimal(10,2)"`
 	Stature       float64   `gorm:"type:decimal(10,2)"`
 	SittingHeight float64   `gorm:"column:sitting_height;type:decimal(10,2)"`
@@ -43,12 +45,9 @@ type bodyMeasurementDB struct {
 	ThighLow   float64 `gorm:"column:thigh_low;type:decimal(10,2)"`
 	Calf       float64 `gorm:"type:decimal(10,2)"`
 	Ankle      float64 `gorm:"type:decimal(10,2)"`
-
 	// Metadata & Relations
 	CreatedAt time.Time `gorm:"column:created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at"`
 
-	ClientId uuid.UUID `gorm:"type:uuid;not null;index"`
 }
 
 func (e *bodyMeasurementDB) toEntity() (BodyMeasurement, *core.BaseError) {
@@ -93,11 +92,20 @@ func (e *bodyMeasurementDB) toEntity() (BodyMeasurement, *core.BaseError) {
 	calf := validate(e.Calf, valueobject.CM)
 	ankle := validate(e.Ankle, valueobject.CM)
 
+	createdAt, err := valueobject.NewTrackerFromTime(&e.CreatedAt)
+	if err != nil {
+		errList = append(errList, err.Details...)
+	}
+
+	clientId := valueobject.IdentifierFromValue(e.ClientId)
+
 	if len(errList) > 0 {
 		return nil, core.CorrupetedDatabase(errList)
 	}
 
 	return &entity{
+		id:            valueobject.IdentifierFromValue(e.Id),
+		clientId:      clientId,
 		mass:          mass,
 		stature:       stature,
 		sittingHeight: sittingHeight,
@@ -123,6 +131,7 @@ func (e *bodyMeasurementDB) toEntity() (BodyMeasurement, *core.BaseError) {
 		thighLow:      thighLow,
 		calf:          calf,
 		ankle:         ankle,
+		createdAt:     createdAt,
 	}, nil
 
 }
@@ -157,6 +166,10 @@ type Repository interface {
 	) (BodyMeasurement, *core.BaseError)
 	Create(ctx context.Context, u BodyMeasurement) *core.BaseError
 	Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError
+}
+
+func (repository) TableName() string {
+	return "body_measurements"
 }
 
 func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {

@@ -106,7 +106,7 @@ func (s *AuthenticationService) Login(
 		return nil, EmailNotConfirmed()
 	}
 
-	if user.Password().IsEqual(dto.Password()) {
+	if !user.Password().IsEqual(dto.Password()) {
 		return nil, WrongCredentials()
 	}
 
@@ -226,7 +226,7 @@ func (s *AuthenticationService) sendEmailConfirmationToken(
 	replacements := map[string]string{
 		"{{firstname}}": name.Firstname(),
 		"{{code}}":      token.String(),
-		"{{url}}":       FRONT_URL + "/authentication/verify-email",
+		"{{url}}":       FRONT_URL + "/authentication/verify-email/" + token.String(),
 	}
 
 	sender, senderErr := email.NewMailSender(
@@ -248,7 +248,7 @@ func (s *AuthenticationService) sendResetPasswordToken(
 ) *core.BaseError {
 
 	replacements := map[string]string{
-		"{{url}}": FRONT_URL + "/authentication/change-password" + token.String(),
+		"{{url}}": FRONT_URL + "/authentication/change-password/" + token.String(),
 	}
 
 	sender, senderErr := email.NewMailSender(

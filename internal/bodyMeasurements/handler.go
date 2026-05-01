@@ -84,7 +84,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		response.WriteJSON(w, err.StatusCode, err)
 	}
 
-	clientId, err := valueobject.IdentifierFromString(r.PathValue("userId"))
+	clientId, err := valueobject.IdentifierFromString(r.PathValue("clientId"))
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return

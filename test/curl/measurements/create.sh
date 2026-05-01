@@ -1,4 +1,4 @@
-curl -v -X POST http://localhost:3000/body-measurements \
+curl -v -X POST http://localhost:3000/body-measurements/$1 \
   -H "Content-Type: application/json" \
   -d '{
     "mass": 75.5,
@@ -25,6 +25,5 @@ curl -v -X POST http://localhost:3000/body-measurements \
     "thighHigh": 60.2,
     "thighLow": 54.1,
     "calf": 37.5,
-    "ankle": 22.0,
-    "userId": "3ef98868-b2b5-499b-ab3a-5c8fa551b54e"
+    "ankle": 22.0
   }' | jq
