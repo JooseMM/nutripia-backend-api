@@ -42,5 +42,5 @@ func (dto *RawUpdateClientRequest) ToValueObject() (*UpdateClientRequest, *core.
 type UpdateClientRequest struct {
 	Name         valueobject.Namer
 	EmailAddress valueobject.Emailer
-	BirthDate    valueobject.BirthDater
+	BirthDate    valueobject.Dater
 }

@@ -2,121 +2,89 @@ package bodyMeasurement
 
 import (
 	"context"
-	"time"
 
-	bodyMeasurementTypes "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types"
-	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types/dtos"
+	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
-	"github.com/google/uuid"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
-type IBodyMeasurementService interface {
+type BodyMeasurementManager interface {
 	Create(
-		dto *bodyMeasurementDtos.CreateMeasurementDto,
 		ctx context.Context,
-	) (*uuid.UUID, *core.BaseError)
+		dto bodyMeasurementDtos.CreateMeasurement,
+		userId valueobject.Identifier,
+	) (valueobject.Identifier, *core.BaseError)
 	GetById(
-		id *uuid.UUID,
 		ctx context.Context,
-	) (*bodyMeasurementTypes.BodyMeasurement, *core.BaseError)
+		id valueobject.Identifier,
+	) (BodyMeasurement, *core.BaseError)
 	GetByRange(
-		userId *uuid.UUID,
-		start *time.Time,
-		end *time.Time,
 		ctx context.Context,
-	) ([]*bodyMeasurementTypes.BodyMeasurement, *core.BaseError)
-	DeleteOne(id *uuid.UUID, ctx context.Context) *core.BaseError
+		userId valueobject.Identifier,
+		dateRange bodyMeasurementDtos.RangeDate,
+	) ([]BodyMeasurement, *core.BaseError)
+	DeleteOne(ctx context.Context, id valueobject.Identifier) *core.BaseError
 }
 
-type BodyMeasurementService struct {
-	Repo IBodyMeasurementRepository
+type service struct {
+	Repo Repository
 }
 
-func NewBodyMeasurementService(repo IBodyMeasurementRepository) IBodyMeasurementService {
-	return &BodyMeasurementService{repo}
+func NewBodyMeasurementService(repo Repository) BodyMeasurementManager {
+	return &service{repo}
 }
 
-func (u *BodyMeasurementService) Create(
-	dto *bodyMeasurementDtos.CreateMeasurementDto,
+func (u *service) Create(
 	ctx context.Context,
-) (*uuid.UUID, *core.BaseError) {
-	now := time.Now()
-	query, queryErr := u.Repo.GetByDate(ctx, &now, &dto.ClientId)
-	if queryErr != nil && queryErr.ErrorCode != string(BODY_MEASUREMENT_RECORD_NOT_FOUND) {
-		return nil, queryErr
+	dto bodyMeasurementDtos.CreateMeasurement,
+	userId valueobject.Identifier,
+) (valueobject.Identifier, *core.BaseError) {
+	now := valueobject.NewTracker()
+	isAlreadyFill, err := u.Repo.DateAlreadyFill(ctx, now, userId)
+	if err != nil {
+		return nil, err
 	}
-	if query != nil {
-		return nil, BodyMeasurementAlreadyExisting(now)
-	}
-
-	measurement := &bodyMeasurementTypes.BodyMeasurement{
-		ID:            uuid.New(),
-		Mass:          dto.Mass,
-		Stature:       dto.Stature,
-		SittingHeight: dto.SittingHeight,
-		ArmSpan:       dto.ArmSpan,
-		Triceps:       dto.Triceps,
-		Subscapular:   dto.Subscapular,
-		Biceps:        dto.Biceps,
-		IliacCrest:    dto.IliacCrest,
-		Supraspinale:  dto.Supraspinale,
-		Abdominal:     dto.Abdominal,
-		FrontThigh:    dto.FrontThigh,
-		MedialCalf:    dto.MedialCalf,
-		Head:          dto.Head,
-		Neck:          dto.Neck,
-		ArmRelaxed:    dto.ArmRelaxed,
-		ArmFlex:       dto.ArmFlex,
-		Forearm:       dto.Forearm,
-		Wrist:         dto.Wrist,
-		Chest:         dto.Chest,
-		Waist:         dto.Waist,
-		Hip:           dto.Hip,
-		ThighHigh:     dto.ThighHigh,
-		ThighLow:      dto.ThighLow,
-		Calf:          dto.Calf,
-		Ankle:         dto.Ankle,
-
-		ClientId:    dto.ClientId,
-		CreatedAt: time.Now(),
+	if *isAlreadyFill {
+		return nil, BodyMeasurementAlreadyExisting(now.ToTime())
 	}
 
-	if err := u.Repo.Create(ctx, measurement); err != nil {
+	bm := NewBodyMeasurement(dto, userId)
+
+	if err := u.Repo.Create(ctx, bm); err != nil {
 		return nil, err
 	}
 
-	return &measurement.ID, nil
+	return bm.Id(), nil
 }
 
-func (u *BodyMeasurementService) GetById(
-	id *uuid.UUID,
+func (u *service) GetById(
 	ctx context.Context,
-) (*bodyMeasurementTypes.BodyMeasurement, *core.BaseError) {
-	foundUser, unexpectedErr := u.Repo.GetById(ctx, id)
-	if unexpectedErr != nil {
-		return nil, unexpectedErr
+	id valueobject.Identifier,
+) (BodyMeasurement, *core.BaseError) {
+	bm, err := u.Repo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
 	}
 
-	return foundUser, nil
+	return bm, nil
 }
 
-func (u *BodyMeasurementService) GetByRange(
-	userId *uuid.UUID,
-	start *time.Time,
-	end *time.Time,
+func (u *service) GetByRange(
 	ctx context.Context,
-) ([]*bodyMeasurementTypes.BodyMeasurement, *core.BaseError) {
-	found, unexpectedErr := u.Repo.GetByRange(ctx, start, end, userId)
-	if unexpectedErr != nil {
-		return nil, unexpectedErr
+	userId valueobject.Identifier,
+	rageDate bodyMeasurementDtos.RangeDate,
+) ([]BodyMeasurement, *core.BaseError) {
+	bm, err := u.Repo.GetByRange(ctx, start, end, userId)
+	if err != nil {
+		return nil, err
 	}
 
-	return found, nil
+	return bm, nil
 }
 
-func (u *BodyMeasurementService) DeleteOne(
-	id *uuid.UUID,
+func (u *service) DeleteOne(
 	ctx context.Context,
+	id valueobject.Identifier,
 ) *core.BaseError {
 	err := u.Repo.Delete(ctx, id)
 	if err != nil {

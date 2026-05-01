@@ -1,8 +1,6 @@
 package clients
 
 import (
-	"time"
-
 	clientDtos "github.com/JooseMM/nutripia-backend-api/internal/clients/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
@@ -11,11 +9,11 @@ type entity struct {
 	id        valueobject.Identifier
 	name      valueobject.Namer
 	email     valueobject.Emailer
-	birthDate valueobject.BirthDater
+	birthDate valueobject.Dater
 	ownerId   valueobject.Identifier
 
-	createdAt time.Time
-	updateAt  time.Time
+	createdAt valueobject.Dater
+	updateAt  valueobject.Dater
 }
 
 type Client interface {
@@ -32,9 +30,9 @@ func (e *entity) ToDB() entityDB {
 		firstname: e.name.Firstname(),
 		lastname:  e.name.Lastname(),
 		email:     e.email.String(),
-		birthDate: e.birthDate.Date(),
-		createdAt: e.createdAt,
-		updatedAt: e.updateAt,
+		birthDate: e.birthDate.ToTime(),
+		createdAt: e.createdAt.ToTime(),
+		updatedAt: e.updateAt.ToTime(),
 	}
 }
 
@@ -42,8 +40,8 @@ func (e *entity) Id() valueobject.Identifier {
 	return e.id
 }
 
-func FromDTO(dto clientDtos.CreateClientRequest, ownerId valueobject.Identifier) Client {
-	now := time.Now().UTC()
+func NewClient(dto clientDtos.CreateClientRequest, ownerId valueobject.Identifier) Client {
+	now := valueobject.NewTracker()
 	return &entity{id: valueobject.NewIdentifier(),
 		name:      dto.Name,
 		email:     dto.EmailAddress,
@@ -59,7 +57,7 @@ func (e *entity) Update(dto clientDtos.UpdateClientRequest) {
 	e.email = dto.EmailAddress
 	e.birthDate = dto.BirthDate
 
-	e.updateAt = time.Now().UTC()
+	e.updateAt = valueobject.NewTracker()
 }
 
 func (e *entity) ToDTO() clientDtos.ClientDto {
@@ -68,6 +66,6 @@ func (e *entity) ToDTO() clientDtos.ClientDto {
 		Firstname:    e.name.Firstname(),
 		Lastname:     e.name.Lastname(),
 		EmailAddress: e.email.String(),
-		BirthDate:    e.birthDate.Date(),
+		BirthDate:    e.birthDate.ToTime(),
 	}
 }

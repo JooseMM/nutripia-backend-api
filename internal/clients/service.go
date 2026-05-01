@@ -48,7 +48,7 @@ func (u *service) CreateUser(
 		return nil, UserEmailAlreadyExisting(dto.EmailAddress.String())
 	}
 
-	client := FromDTO(dto, ownerId)
+	client := NewClient(dto, ownerId)
 
 	creationErr := u.Repo.Create(ctx, client)
 	if creationErr != nil {

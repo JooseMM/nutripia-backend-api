@@ -3,11 +3,11 @@ package bodyMeasurement
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
-	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types/dtos"
+	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/dtos"
 	"github.com/JooseMM/nutripia-backend-api/internal/clients"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 	"github.com/google/uuid"
 )
@@ -20,49 +20,39 @@ type IBodyMeasurementHandler interface {
 }
 
 type BodyMeasurementHandler struct {
-	ClientService            clients.IClientService
-	bodyMeasurementService IBodyMeasurementService
+	ClientService          clients.ClientManager
+	bodyMeasurementService BodyMeasurementManager
 }
 
 func NewBodyMeasurementHandler(
-	bodyMeasurementService IBodyMeasurementService,
-	userService clients.IClientService,
+	bodyMeasurementService BodyMeasurementManager,
+	userService clients.ClientManager,
 ) IBodyMeasurementHandler {
 	return &BodyMeasurementHandler{
-		ClientService:            userService,
+		ClientService:          userService,
 		bodyMeasurementService: bodyMeasurementService,
 	}
 }
 
 func (h *BodyMeasurementHandler) GetByRange(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-
-	layout := "2000-01-01"
 	queryParam := r.URL.Query()
 
-	startDate, startErr := time.Parse(layout, queryParam.Get("start"))
-	if startErr != nil {
-		startDate = time.Now().AddDate(-1, 0, 0)
+	dto, err := bodyMeasurementDtos.NewRangeDate(queryParam.Get("start"), queryParam.Get("end"))
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
 	}
 
-	endDate, endErr := time.Parse(layout, queryParam.Get("end"))
-	if endErr != nil {
-		endDate = time.Now()
-	}
-
-	rawUserId := r.PathValue("userId")
-	userId, parseErr := uuid.Parse(rawUserId)
-	if parseErr != nil {
-		responseErr := core.ValidationError(
-			[]string{"The identifier provided in the URL path is not a valid UUID format."},
-		)
-		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+	id, err := valueobject.IdentifierFromString(r.PathValue("userId"))
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
 	measurements, err := h.bodyMeasurementService.GetByRange(
 		&userId,
-		&startDate,
+		&start,
 		&endDate,
 		r.Context(),
 	)

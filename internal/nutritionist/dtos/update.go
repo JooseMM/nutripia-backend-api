@@ -17,10 +17,10 @@ type RawUpdateNutritionistRequest struct {
 type UpdateNutritionist struct {
 	name         valueobject.Namer
 	emailAddress valueobject.Emailer
-	birthDate    valueobject.BirthDater
+	birthDate    valueobject.Dater
 }
 
-func (u *UpdateNutritionist) BirthDate() valueobject.BirthDater {
+func (u *UpdateNutritionist) BirthDate() valueobject.Dater {
 	return u.birthDate
 }
 

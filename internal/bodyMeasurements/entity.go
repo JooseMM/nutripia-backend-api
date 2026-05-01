@@ -1,14 +1,13 @@
 package bodyMeasurement
 
 import (
-	"time"
-
 	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
 type BodyMeasurement interface {
 	ToDTO() bodyMeasurementDtos.BodyMeasurementDto
+	Id() valueobject.Identifier
 }
 
 type entity struct {
@@ -44,7 +43,11 @@ type entity struct {
 	ankle      valueobject.Measurer
 
 	clientId  valueobject.Identifier
-	createdAt time.Time
+	createdAt valueobject.Dater
+}
+
+func (d *entity) Id() valueobject.Identifier {
+	return d.id
 }
 
 func NewBodyMeasurement(
@@ -85,7 +88,7 @@ func NewBodyMeasurement(
 
 		/* Metadata */
 		clientId:  ownerId,
-		createdAt: time.Now(),
+		createdAt: valueobject.NewTracker(),
 	}
 }
 
@@ -120,7 +123,7 @@ func (b *entity) ToDTO() bodyMeasurementDtos.BodyMeasurementDto {
 		Calf:       b.calf.Float(),
 		Ankle:      b.ankle.Float(),
 
-		CreatedAt: b.createdAt,
+		CreatedAt: b.createdAt.ToTime(),
 		ClientId:  b.clientId.Key(),
 	}
 }

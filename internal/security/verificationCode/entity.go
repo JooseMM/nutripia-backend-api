@@ -1,8 +1,6 @@
 package verification
 
 import (
-	"time"
-
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
@@ -16,8 +14,8 @@ type verificationToken struct {
 	token     valueobject.Tokenizer
 	tokenType valueobject.TokenTypeEnum
 	userId    valueobject.Identifier
-	createdAt time.Time
-	expiredAt time.Time
+	createdAt valueobject.Dater
+	expiredAt valueobject.Dater
 }
 
 func (v *verificationToken) ToDB() entityDB {
@@ -25,26 +23,25 @@ func (v *verificationToken) ToDB() entityDB {
 		id:        v.id.Key(),
 		token:     v.token.String(),
 		userId:    v.userId.Key(),
-		createdAt: v.createdAt,
-		expiredAt: v.expiredAt,
+		createdAt: v.createdAt.ToTime(),
+		expiredAt: v.expiredAt.ToTime(),
 	}
 }
 
 func (v *verificationToken) IsExpired() bool {
-	now := time.Now().UTC()
-	return v.expiredAt.Equal(now) || v.expiredAt.Before(now)
+	return v.expiredAt.IsPastOrNow()
 }
 
 func NewVerificationToken(
 	token valueobject.Tokenizer,
 	userId valueobject.Identifier,
 ) VerificationManager {
-	now := time.Now().UTC()
+	now := valueobject.NewTracker()
 	return &verificationToken{
 		id:        valueobject.NewIdentifier(),
 		token:     token,
 		userId:    userId,
 		createdAt: now,
-		expiredAt: now.Add(30 * time.Minute),
+		expiredAt: valueobject.NewExpiredDate(30),
 	}
 }

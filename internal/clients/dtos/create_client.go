@@ -17,7 +17,7 @@ type RawCreateClientRequest struct {
 type CreateClientRequest struct {
 	Name         valueobject.Namer
 	EmailAddress valueobject.Emailer
-	BirthDate    valueobject.BirthDater
+	BirthDate    valueobject.Dater
 }
 
 func (dto *RawCreateClientRequest) ToValueObject() (*CreateClientRequest, *core.BaseError) {

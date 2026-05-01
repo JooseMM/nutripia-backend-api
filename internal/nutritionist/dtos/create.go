@@ -61,7 +61,7 @@ type RegisterNutritionist struct {
 	name         valueobject.Namer
 	emailAddress valueobject.Emailer
 	password     valueobject.Passworder
-	birthDate    valueobject.BirthDater
+	birthDate    valueobject.Dater
 	rut          valueobject.RUTer
 }
 
@@ -77,7 +77,7 @@ func (dto *RegisterNutritionist) Name() valueobject.Namer {
 	return dto.name
 }
 
-func (dto *RegisterNutritionist) BirthDate() valueobject.BirthDater {
+func (dto *RegisterNutritionist) BirthDate() valueobject.Dater {
 	return dto.birthDate
 }
 

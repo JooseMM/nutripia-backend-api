@@ -1,8 +1,6 @@
 package session
 
 import (
-	"time"
-
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
@@ -21,14 +19,13 @@ func NewSession(
 	if err != nil {
 		return nil, err
 	}
-	now := time.Now().UTC()
 	return &session{
 		id:        valueobject.NewIdentifier(),
 		token:     token,
 		role:      role,
 		userId:    userId,
-		expiredAt: now.Add(72 * time.Hour),
-		createdAt: now,
+		expiredAt: valueobject.NewExpiredDate(60 * 24),
+		createdAt: valueobject.NewTracker(),
 	}, nil
 }
 
@@ -37,8 +34,8 @@ type session struct {
 	token     valueobject.Tokenizer
 	userId    valueobject.Identifier
 	role      valueobject.UserRoles
-	expiredAt time.Time
-	createdAt time.Time
+	expiredAt valueobject.Dater
+	createdAt valueobject.Dater
 }
 
 func (s *session) ToDB() entityDB {
@@ -47,8 +44,8 @@ func (s *session) ToDB() entityDB {
 		token:     s.token.Hash(),
 		userId:    s.userId.Key(),
 		role:      s.role,
-		expiredAt: s.expiredAt,
-		createdAt: s.createdAt,
+		expiredAt: s.expiredAt.ToTime(),
+		createdAt: s.createdAt.ToTime(),
 	}
 }
 
@@ -57,6 +54,5 @@ func (s *session) Token() valueobject.Tokenizer {
 }
 
 func (s *session) IsExpired() bool {
-	now := time.Now().UTC()
-	return s.expiredAt.Equal(now) || s.expiredAt.Before(now)
+	return s.expiredAt.IsPastOrNow()
 }

@@ -1,8 +1,6 @@
 package nutritionist
 
 import (
-	"time"
-
 	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
@@ -11,7 +9,7 @@ type Nutritionist interface {
 	Id() valueobject.Identifier
 	Name() valueobject.Namer
 	EmailAddress() valueobject.Emailer
-	BirthDate() valueobject.BirthDater
+	BirthDate() valueobject.Dater
 
 	Password() valueobject.Passworder
 	UpdatePassword(password valueobject.Passworder)
@@ -29,11 +27,11 @@ type Entity struct {
 	name             valueobject.Namer
 	isEmailConfirmed bool
 	emailAddress     valueobject.Emailer
-	birthDate        valueobject.BirthDater
+	birthDate        valueobject.Dater
 	password         valueobject.Passworder
 	rut              valueobject.RUTer
-	createdAt        time.Time
-	updatedAt        time.Time
+	createdAt        valueobject.Dater
+	updatedAt        valueobject.Dater
 }
 
 func (e *Entity) Id() valueobject.Identifier {
@@ -54,14 +52,14 @@ func (e *Entity) Password() valueobject.Passworder {
 
 func (e *Entity) UpdatePassword(password valueobject.Passworder) {
 	e.password = password
-	e.updatedAt = time.Now().UTC()
+	e.updatedAt = valueobject.NewTracker()
 }
 
 func (e *Entity) RUT() valueobject.RUTer {
 	return e.rut
 }
 
-func (e *Entity) BirthDate() valueobject.BirthDater {
+func (e *Entity) BirthDate() valueobject.Dater {
 	return e.birthDate
 }
 
@@ -71,14 +69,14 @@ func (e *Entity) IsEmailConfirmed() bool {
 
 func (e *Entity) MarkAsEmailAddressConfirmed() {
 	e.isEmailConfirmed = true
-	e.updatedAt = time.Now().UTC()
+	e.updatedAt = valueobject.NewTracker()
 }
 
 func (e *Entity) Update(update nutritionistDtos.UpdateNutritionist) {
 	e.name = update.Name()
 	e.emailAddress = update.EmailAddress()
 	e.birthDate = update.BirthDate()
-	e.updatedAt = time.Now()
+	e.updatedAt = valueobject.NewTracker()
 }
 
 func (e *Entity) ToDTO() nutritionistDtos.Nutritionist {
@@ -88,12 +86,12 @@ func (e *Entity) ToDTO() nutritionistDtos.Nutritionist {
 		Lastname:         e.name.Lastname(),
 		EmailAddress:     e.EmailAddress().String(),
 		IsEmailConfirmed: e.isEmailConfirmed,
-		BirthDate:        e.birthDate.Date(),
+		BirthDate:        e.birthDate.ToTime(),
 	}
 }
 
 func FromRegisterDTO(data nutritionistDtos.RegisterNutritionist) Nutritionist {
-	now := time.Now().UTC()
+	now := valueobject.NewTracker()
 	return &Entity{
 		id:               valueobject.NewIdentifier(),
 		name:             data.Name(),
@@ -111,11 +109,11 @@ func NewEntity(
 	name valueobject.Namer,
 	emailAddress valueobject.Emailer,
 	isEmailConfirmed bool,
-	birthDate valueobject.BirthDater,
+	birthDate valueobject.Dater,
 	password valueobject.Passworder,
 	rut valueobject.RUTer,
 ) Nutritionist {
-	now := time.Now().UTC()
+	now := valueobject.NewTracker()
 	return &Entity{
 		id:               valueobject.NewIdentifier(),
 		name:             name,
