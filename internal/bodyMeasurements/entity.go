@@ -8,6 +8,7 @@ import (
 type BodyMeasurement interface {
 	ToDTO() bodyMeasurementDtos.BodyMeasurementDto
 	Id() valueobject.Identifier
+	ToDB() bodyMeasurementDB
 }
 
 type entity struct {
@@ -46,8 +47,8 @@ type entity struct {
 	createdAt valueobject.Dater
 }
 
-func (d *entity) Id() valueobject.Identifier {
-	return d.id
+func (e *entity) Id() valueobject.Identifier {
+	return e.id
 }
 
 func NewBodyMeasurement(
@@ -92,38 +93,74 @@ func NewBodyMeasurement(
 	}
 }
 
-func (b *entity) ToDTO() bodyMeasurementDtos.BodyMeasurementDto {
+func (e *entity) ToDTO() bodyMeasurementDtos.BodyMeasurementDto {
 	return bodyMeasurementDtos.BodyMeasurementDto{
-		Id:            b.id.Key(),
-		Mass:          b.mass.Float(),
-		Stature:       b.stature.Float(),
-		SittingHeight: b.sittingHeight.Float(),
-		ArmSpan:       b.armSpan.Float(),
+		Id:            e.id.Key(),
+		Mass:          e.mass.Float(),
+		Stature:       e.stature.Float(),
+		SittingHeight: e.sittingHeight.Float(),
+		ArmSpan:       e.armSpan.Float(),
 
-		Triceps:      b.triceps.Float(),
-		Subscapular:  b.subscapular.Float(),
-		Biceps:       b.biceps.Float(),
-		IliacCrest:   b.iliacCrest.Float(),
-		Supraspinale: b.supraspinale.Float(),
-		Abdominal:    b.abdominal.Float(),
-		FrontThigh:   b.frontThigh.Float(),
-		MedialCalf:   b.medialCalf.Float(),
+		Triceps:      e.triceps.Float(),
+		Subscapular:  e.subscapular.Float(),
+		Biceps:       e.biceps.Float(),
+		IliacCrest:   e.iliacCrest.Float(),
+		Supraspinale: e.supraspinale.Float(),
+		Abdominal:    e.abdominal.Float(),
+		FrontThigh:   e.frontThigh.Float(),
+		MedialCalf:   e.medialCalf.Float(),
 
-		Head:       b.head.Float(),
-		Neck:       b.neck.Float(),
-		ArmRelaxed: b.armRelaxed.Float(),
-		ArmFlex:    b.armFlex.Float(),
-		Forearm:    b.forearm.Float(),
-		Wrist:      b.wrist.Float(),
-		Chest:      b.chest.Float(),
-		Waist:      b.waist.Float(),
-		Hip:        b.hip.Float(),
-		ThighHigh:  b.thighHigh.Float(),
-		ThighLow:   b.thighLow.Float(),
-		Calf:       b.calf.Float(),
-		Ankle:      b.ankle.Float(),
+		Head:       e.head.Float(),
+		Neck:       e.neck.Float(),
+		ArmRelaxed: e.armRelaxed.Float(),
+		ArmFlex:    e.armFlex.Float(),
+		Forearm:    e.forearm.Float(),
+		Wrist:      e.wrist.Float(),
+		Chest:      e.chest.Float(),
+		Waist:      e.waist.Float(),
+		Hip:        e.hip.Float(),
+		ThighHigh:  e.thighHigh.Float(),
+		ThighLow:   e.thighLow.Float(),
+		Calf:       e.calf.Float(),
+		Ankle:      e.ankle.Float(),
 
-		CreatedAt: b.createdAt.ToTime(),
-		ClientId:  b.clientId.Key(),
+		CreatedAt: e.createdAt.ToTime(),
+		ClientId:  e.clientId.Key(),
+	}
+}
+
+func (e *entity) ToDB() bodyMeasurementDB {
+	return bodyMeasurementDB{
+		Id:            e.id.Key(),
+		Mass:          e.mass.Float(),
+		Stature:       e.stature.Float(),
+		SittingHeight: e.sittingHeight.Float(),
+		ArmSpan:       e.armSpan.Float(),
+
+		Triceps:      e.triceps.Float(),
+		Subscapular:  e.subscapular.Float(),
+		Biceps:       e.biceps.Float(),
+		IliacCrest:   e.iliacCrest.Float(),
+		Supraspinale: e.supraspinale.Float(),
+		Abdominal:    e.abdominal.Float(),
+		FrontThigh:   e.frontThigh.Float(),
+		MedialCalf:   e.medialCalf.Float(),
+
+		Head:       e.head.Float(),
+		Neck:       e.neck.Float(),
+		ArmRelaxed: e.armRelaxed.Float(),
+		ArmFlex:    e.armFlex.Float(),
+		Forearm:    e.forearm.Float(),
+		Wrist:      e.wrist.Float(),
+		Chest:      e.chest.Float(),
+		Waist:      e.waist.Float(),
+		Hip:        e.hip.Float(),
+		ThighHigh:  e.thighHigh.Float(),
+		ThighLow:   e.thighLow.Float(),
+		Calf:       e.calf.Float(),
+		Ankle:      e.ankle.Float(),
+
+		CreatedAt: e.createdAt.ToTime(),
+		ClientId:  e.clientId.Key(),
 	}
 }

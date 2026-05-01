@@ -30,7 +30,7 @@ func (n *HumanName) ToString() string {
 	return n.firstname + " " + n.lastname
 }
 
-func NewName(rawFirstname string, rawLastname string) (Namer, []string) {
+func NewName(rawFirstname string, rawLastname string) (Namer, *core.BaseError) {
 	var errList []string
 	firstname := strings.TrimSpace(rawFirstname)
 	lastname := strings.TrimSpace(rawLastname)
@@ -65,7 +65,7 @@ func NewName(rawFirstname string, rawLastname string) (Namer, []string) {
 	}
 
 	if len(errList) > 0 {
-		return nil, errList
+		return nil, core.ValidationError(errList)
 	}
 
 	return &HumanName{

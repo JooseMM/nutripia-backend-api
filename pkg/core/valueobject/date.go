@@ -13,6 +13,7 @@ const (
 	BirthDate
 	Tracker
 	RangeDate
+	Expiration
 )
 
 type Dater interface {
@@ -61,9 +62,16 @@ func (d *date) YearsSince() int {
 
 func NewExpiredDate(minutesFromNow int) Dater {
 	return &date{
-		value:    time.Now().Add(time.Duration(minutesFromNow) * time.Minute),
-		dateType: Tracker,
+		value:    time.Now().UTC().Add(time.Duration(minutesFromNow) * time.Minute),
+		dateType: Expiration,
 	}
+}
+
+func ExpiredDateFromTime(raw time.Time) (Dater, *core.BaseError) {
+	return &date{
+		value:    raw.UTC(),
+		dateType: Expiration,
+	}, nil
 }
 
 func NewAppointmentDate(raw time.Time) (Dater, *core.BaseError) {
@@ -79,15 +87,9 @@ func NewAppointmentDate(raw time.Time) (Dater, *core.BaseError) {
 	}, nil
 }
 
-func NewBirthDate(raw time.Time) (Dater, []string) {
-	var errList []string
-
-	if isPastOrNow(raw) {
-		errList = append(errList, "BirthDate: cannot be today or in the future.")
-	}
-
-	if len(errList) > 0 {
-		return nil, errList
+func NewBirthDate(raw time.Time) (Dater, *core.BaseError) {
+	if !isPastOrNow(raw) {
+		return nil, core.ValidationError([]string{"BirthDate: cannot be today or in the future."})
 	}
 
 	return &date{
@@ -103,28 +105,22 @@ func NewTracker() Dater {
 	}
 }
 
-func NewRangeDate(raw time.Time) (Dater, []string) {
-	var errList []string
+func NewRangeDate(raw time.Time) (Dater, *core.BaseError) {
 	if !isPastOrNow(raw) {
-		errList = append(errList, "Tracker: cannot be today or in the future.")
-	}
-
-	if len(errList) > 0 {
-		return nil, errList
+		return nil, core.ValidationError([]string{"RageDate: cannot be today or in the future."})
 	}
 
 	return &date{
-		value:    raw,
+		value:    raw.UTC(),
 		dateType: RangeDate,
 	}, nil
 }
 
-func NewTrackerFromTime(raw *time.Time) (Dater, []string) {
-	var errList []string
+func NewTrackerFromTime(raw *time.Time) (Dater, *core.BaseError) {
 	now := time.Now().UTC()
 
-	if now.After(*raw) {
-		errList = append(errList, "Tracker: cannot be today or in the future.")
+	if raw.UTC().After(now) {
+		return nil, core.ValidationError([]string{"Tracker: cannot be in the future."})
 	}
 	return &date{
 		value:    raw.UTC(),
@@ -134,5 +130,7 @@ func NewTrackerFromTime(raw *time.Time) (Dater, []string) {
 
 func isPastOrNow(raw time.Time) bool {
 	now := time.Now().UTC()
-	return now.Before(raw) || now.Equal(raw)
+	rawUTC := raw.UTC()
+
+	return rawUTC.Before(now) || rawUTC.Equal(now)
 }

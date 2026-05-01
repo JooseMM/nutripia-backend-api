@@ -11,16 +11,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type entityDB struct {
-	id        uuid.UUID             `gorm:"type:uuid;primaryKey"`
-	token     string                `gorm:"column:token;not null"`
-	userId    uuid.UUID             `gorm:"type:uuid;index"`
-	role      valueobject.UserRoles `gorm:"type:varchar(20)"`
-	expiredAt time.Time             `gorm:"column:expired_at;index"`
-	createdAt time.Time             `gorm:"column:created_at"`
+type sessions struct {
+	Id        uuid.UUID             `gorm:"type:uuid;primaryKey"`
+	Token     string                `gorm:"column:token;not null"`
+	UserId    uuid.UUID             `gorm:"type:uuid;index"`
+	Role      valueobject.UserRoles `gorm:"type:int"`
+	ExpiredAt time.Time             `gorm:"column:expired_at;index"`
+	CreatedAt time.Time             `gorm:"column:created_at"`
 }
 
-func (entityDB) TableName() string {
+func (sessions) TableName() string {
 	return "sessions"
 }
 
@@ -36,7 +36,7 @@ type Repository interface {
 }
 
 func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
-	if err := db.AutoMigrate(&entityDB{}); err != nil {
+	if err := db.AutoMigrate(&sessions{}); err != nil {
 		return nil, core.UnexpectedError(err.Error())
 	}
 
@@ -49,7 +49,7 @@ func (s *repo) GetByHash(
 ) (Sessioner, *core.BaseError) {
 	var session session
 
-	result := s.db.WithContext(ctx).Find(&session, "token = ?", token.Hash())
+	result := s.db.WithContext(ctx).First(&session, "token = ?", token.Hash())
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, SessionNotFound()
@@ -65,7 +65,8 @@ func (s *repo) CreateSession(
 	ctx context.Context,
 	session Sessioner,
 ) *core.BaseError {
-	result := s.db.WithContext(ctx).Create(session)
+	dto := session.ToDB()
+	result := s.db.WithContext(ctx).Create(&dto)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}

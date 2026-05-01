@@ -2,6 +2,8 @@ package valueobject
 
 import (
 	"strings"
+
+	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
 type Emailer interface {
@@ -17,7 +19,7 @@ func (e *EmailAddress) String() string {
 	return e.prefix + "@" + e.domain
 }
 
-func NewEmailAddress(raw string) (Emailer, []string) {
+func NewEmailAddress(raw string) (Emailer, *core.BaseError) {
 	var errList []string
 	email := strings.TrimSpace(raw)
 
@@ -31,7 +33,7 @@ func NewEmailAddress(raw string) (Emailer, []string) {
 	}
 
 	if len(errList) > 0 {
-		return nil, errList
+		return nil, core.ValidationError(errList)
 	}
 
 	return &EmailAddress{

@@ -6,7 +6,7 @@ import (
 )
 
 type Sessioner interface {
-	ToDB() entityDB
+	ToDB() sessions
 	IsExpired() bool
 	Token() valueobject.Tokenizer
 }
@@ -38,14 +38,14 @@ type session struct {
 	createdAt valueobject.Dater
 }
 
-func (s *session) ToDB() entityDB {
-	return entityDB{
-		id:        s.id.Key(),
-		token:     s.token.Hash(),
-		userId:    s.userId.Key(),
-		role:      s.role,
-		expiredAt: s.expiredAt.ToTime(),
-		createdAt: s.createdAt.ToTime(),
+func (s *session) ToDB() sessions {
+	return sessions{
+		Id:        s.id.Key(),
+		Token:     s.token.Hash(),
+		UserId:    s.userId.Key(),
+		Role:      s.role,
+		ExpiredAt: s.expiredAt.ToTime(),
+		CreatedAt: s.createdAt.ToTime(),
 	}
 }
 

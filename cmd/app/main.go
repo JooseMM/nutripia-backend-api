@@ -36,6 +36,11 @@ func main() {
 		"POST /nutritionist/register",
 		app.AuthenticationHandler.RegisterNutritionist,
 	)
+
+	mux.HandleFunc(
+		"POST /nutritionist/login",
+		app.AuthenticationHandler.LoginNutritionist,
+	)
 	mux.HandleFunc(
 		"GET /nutritionist/{id}",
 		app.NutritionistHandler.GetNutritionistById,

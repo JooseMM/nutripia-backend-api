@@ -19,17 +19,17 @@ func (dto *RawUpdateClientRequest) ToValueObject() (*UpdateClientRequest, *core.
 
 	name, err := valueobject.NewName(dto.Firstname, dto.Lastname)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
 	email, err := valueobject.NewEmailAddress(dto.EmailAddress)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
 	birthDate, err := valueobject.NewBirthDate(dto.BirthDate)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
 	return &UpdateClientRequest{

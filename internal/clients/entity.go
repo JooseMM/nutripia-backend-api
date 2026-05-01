@@ -19,20 +19,20 @@ type entity struct {
 type Client interface {
 	Id() valueobject.Identifier
 	Update(dto clientDtos.UpdateClientRequest)
-	ToDB() entityDB
+	ToDB() clients
 	ToDTO() clientDtos.ClientDto
 }
 
-func (e *entity) ToDB() entityDB {
-	return entityDB{
-		id:        e.id.Key(),
-		ownerId:   e.ownerId.Key(),
-		firstname: e.name.Firstname(),
-		lastname:  e.name.Lastname(),
-		email:     e.email.String(),
-		birthDate: e.birthDate.ToTime(),
-		createdAt: e.createdAt.ToTime(),
-		updatedAt: e.updateAt.ToTime(),
+func (e *entity) ToDB() clients {
+	return clients{
+		Id:        e.id.Key(),
+		OwnerId:   e.ownerId.Key(),
+		Firstname: e.name.Firstname(),
+		Lastname:  e.name.Lastname(),
+		Email:     e.email.String(),
+		BirthDate: e.birthDate.ToTime(),
+		CreatedAt: e.createdAt.ToTime(),
+		UpdatedAt: e.updateAt.ToTime(),
 	}
 }
 

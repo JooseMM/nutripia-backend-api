@@ -37,17 +37,17 @@ func (dto *RawUpdateNutritionistRequest) ToValueObject() (*UpdateNutritionist, *
 
 	name, nameErr := valueobject.NewName(dto.Firstname, dto.Lastname)
 	if nameErr != nil {
-		errList = append(errList, nameErr...)
+		errList = append(errList, nameErr.Details...)
 	}
 
 	email, emailErr := valueobject.NewEmailAddress(dto.EmailAddress)
 	if emailErr != nil {
-		errList = append(errList, emailErr...)
+		errList = append(errList, emailErr.Details...)
 	}
 
 	birthDate, birthDateErr := valueobject.NewBirthDate(dto.BirthDate)
 	if birthDateErr != nil {
-		errList = append(errList, birthDateErr...)
+		errList = append(errList, birthDateErr.Details...)
 	}
 
 	if len(errList) > 0 {

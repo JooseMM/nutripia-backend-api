@@ -12,51 +12,51 @@ import (
 	"gorm.io/gorm"
 )
 
-type entityDB struct {
-	id        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	ownerId   uuid.UUID `gorm:"column:owner_id;type:uuid;index"`
-	firstname string    `gorm:"column:firstname;not null"`
-	lastname  string    `gorm:"column:lastname;not null"`
-	email     string    `gorm:"column:email;uniqueIndex;not null"`
-	birthDate time.Time `gorm:"column:birth_date"`
-	createdAt time.Time `gorm:"column:created_at"`
-	updatedAt time.Time `gorm:"column:updated_at"`
+type clients struct {
+	Id        uuid.UUID `gorm:"type:uuid;primaryKey"`
+	OwnerId   uuid.UUID `gorm:"column:owner_id;type:uuid;index"`
+	Firstname string    `gorm:"column:firstname;not null"`
+	Lastname  string    `gorm:"column:lastname;not null"`
+	Email     string    `gorm:"column:email;uniqueIndex;not null"`
+	BirthDate time.Time `gorm:"column:birth_date"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
 }
 
-func (entityDB) TableName() string {
+func (clients) TableName() string {
 	return "clients"
 }
 
-func (d *entityDB) toEntity() (Client, *core.BaseError) {
+func (d *clients) toEntity() (Client, *core.BaseError) {
 	var errList []string
 
-	id := valueobject.IdentifierFromValue(d.id)
+	id := valueobject.IdentifierFromValue(d.Id)
 
-	ownerId := valueobject.IdentifierFromValue(d.ownerId)
+	ownerId := valueobject.IdentifierFromValue(d.OwnerId)
 
-	name, err := valueobject.NewName(d.firstname, d.lastname)
+	name, err := valueobject.NewName(d.Firstname, d.Lastname)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
-	email, err := valueobject.NewEmailAddress(d.email)
+	email, err := valueobject.NewEmailAddress(d.Email)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
-	birthDate, err := valueobject.NewBirthDate(d.birthDate)
+	birthDate, err := valueobject.NewBirthDate(d.BirthDate)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
-	created, err := valueobject.NewTrackerFromTime(&d.createdAt)
+	created, err := valueobject.NewTrackerFromTime(&d.CreatedAt)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
-	updated, err := valueobject.NewTrackerFromTime(&d.updatedAt)
+	updated, err := valueobject.NewTrackerFromTime(&d.UpdatedAt)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
 	if len(errList) > 0 {
@@ -99,7 +99,7 @@ type Repository interface {
 }
 
 func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
-	if err := db.AutoMigrate(&entityDB{}); err != nil {
+	if err := db.AutoMigrate(&clients{}); err != nil {
 		return nil, core.UnexpectedError(err.Error())
 	}
 	return &repo{db}, nil
@@ -109,9 +109,9 @@ func (r *repo) GetAllByNutritionist(
 	ctx context.Context,
 	userId valueobject.Identifier,
 ) ([]Client, *core.BaseError) {
-	var rawList []entityDB
+	var rawList []clients
 
-	result := r.db.WithContext(ctx).Where("owner_id = ?", userId).Find(&rawList)
+	result := r.db.WithContext(ctx).Where("owner_id = ?", userId.Key()).Find(&rawList)
 	if result.Error != nil {
 		fmt.Printf("error: %s", result.Error)
 		return nil, core.UnexpectedError(result.Error.Error())
@@ -135,9 +135,9 @@ func (r *repo) GetById(
 	ctx context.Context,
 	id valueobject.Identifier,
 ) (Client, *core.BaseError) {
-	var raw entityDB
+	var raw clients
 
-	result := r.db.WithContext(ctx).First(&raw, "id = ?", id)
+	result := r.db.WithContext(ctx).First(&raw, "id = ?", id.Key())
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, UserNotFound(id.String())
@@ -160,7 +160,7 @@ func (r *repo) IsEmailTaken(
 	var exists bool
 
 	err := r.db.WithContext(ctx).
-		Model(&entityDB{}).
+		Model(&clients{}).
 		Select("count(*) > 0").
 		Where("email = ?", emalAddress.String()).
 		Find(&exists).
@@ -176,9 +176,9 @@ func (r *repo) GetByEmailAddress(
 	ctx context.Context,
 	emailAddress valueobject.Emailer,
 ) (Client, *core.BaseError) {
-	var raw entityDB
+	var raw clients
 
-	result := r.db.WithContext(ctx).First(&raw, "email = ?", emailAddress)
+	result := r.db.WithContext(ctx).First(&raw, "email = ?", emailAddress.String())
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, UserNotFound(emailAddress.String())
@@ -194,16 +194,18 @@ func (r *repo) GetByEmailAddress(
 	return client, nil
 }
 
-func (r *repo) Create(ctx context.Context, u Client) *core.BaseError {
-	result := r.db.WithContext(ctx).Create(u.ToDB())
+func (r *repo) Create(ctx context.Context, client Client) *core.BaseError {
+	data := client.ToDB()
+	result := r.db.WithContext(ctx).Create(&data)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
 	return nil
 }
 
-func (r *repo) Update(ctx context.Context, u Client) *core.BaseError {
-	result := r.db.WithContext(ctx).Save(u.ToDB())
+func (r *repo) Update(ctx context.Context, client Client) *core.BaseError {
+	data := client.ToDB()
+	result := r.db.WithContext(ctx).Save(&data)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
@@ -211,7 +213,7 @@ func (r *repo) Update(ctx context.Context, u Client) *core.BaseError {
 }
 
 func (r *repo) Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError {
-	result := r.db.WithContext(ctx).Delete(&entityDB{}, id.Key())
+	result := r.db.WithContext(ctx).Delete(&clients{}, id.Key())
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}

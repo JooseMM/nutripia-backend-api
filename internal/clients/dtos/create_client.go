@@ -24,17 +24,17 @@ func (dto *RawCreateClientRequest) ToValueObject() (*CreateClientRequest, *core.
 	var errList []string
 	name, err := valueobject.NewName(dto.Firstname, dto.Lastname)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
 	email, err := valueobject.NewEmailAddress(dto.EmailAddress)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
 	birthDate, err := valueobject.NewBirthDate(dto.BirthDate)
 	if err != nil {
-		errList = append(errList, err...)
+		errList = append(errList, err.Details...)
 	}
 
 	if len(errList) > 0 {

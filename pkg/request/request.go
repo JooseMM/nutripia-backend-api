@@ -1,11 +1,13 @@
-package core
+package request
 
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 
-func DecodeJSON[T any](w http.ResponseWriter, r *http.Request) (T, []string) {
+func DecodeJSON[T any](w http.ResponseWriter, r *http.Request) (T, *core.BaseError) {
 	var payload T
 
 	// Limit the request body size to prevent memory exhaustion attacks
@@ -13,7 +15,7 @@ func DecodeJSON[T any](w http.ResponseWriter, r *http.Request) (T, []string) {
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
-		return payload, []string{"Invalid request payload: " + err.Error()}
+		return payload, core.ValidationError([]string{"Invalid request payload: " + err.Error()})
 	}
 
 	return payload, nil

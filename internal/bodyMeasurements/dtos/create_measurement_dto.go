@@ -43,7 +43,7 @@ func (d *RawCreateMeasurement) ToValueObject() (*CreateMeasurement, *core.BaseEr
 	validate := func(val float64, unit valueobject.MeasureUnit) valueobject.Measurer {
 		m, err := valueobject.NewMeasurement(val, unit)
 		if err != nil {
-			errList = append(errList, *err)
+			errList = append(errList, err.Details...)
 		}
 		return m
 	}

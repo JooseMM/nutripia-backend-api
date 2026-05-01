@@ -12,86 +12,86 @@ import (
 	"gorm.io/gorm"
 )
 
-type entityDB struct {
-	id            uuid.UUID `gorm:"type:uuid;primaryKey"`
-	mass          float64   `gorm:"type:decimal(10,2)"`
-	stature       float64   `gorm:"type:decimal(10,2)"`
-	sittingHeight float64   `gorm:"column:sitting_height;type:decimal(10,2)"`
-	armSpan       float64   `gorm:"column:arm_span;type:decimal(10,2)"`
+type bodyMeasurementDB struct {
+	Id            uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Mass          float64   `gorm:"type:decimal(10,2)"`
+	Stature       float64   `gorm:"type:decimal(10,2)"`
+	SittingHeight float64   `gorm:"column:sitting_height;type:decimal(10,2)"`
+	ArmSpan       float64   `gorm:"column:arm_span;type:decimal(10,2)"`
 
 	// Skinfolds
-	triceps      float64 `gorm:"type:decimal(10,2)"`
-	subscapular  float64 `gorm:"type:decimal(10,2)"`
-	biceps       float64 `gorm:"type:decimal(10,2)"`
-	iliacCrest   float64 `gorm:"type:decimal(10,2)"`
-	supraspinale float64 `gorm:"type:decimal(10,2)"`
-	abdominal    float64 `gorm:"type:decimal(10,2)"`
-	frontThigh   float64 `gorm:"column:front_thigh;type:decimal(10,2)"`
-	medialCalf   float64 `gorm:"column:Medial_calf;type:decimal(10,2)"`
+	Triceps      float64 `gorm:"type:decimal(10,2)"`
+	Subscapular  float64 `gorm:"type:decimal(10,2)"`
+	Biceps       float64 `gorm:"type:decimal(10,2)"`
+	IliacCrest   float64 `gorm:"type:decimal(10,2)"`
+	Supraspinale float64 `gorm:"type:decimal(10,2)"`
+	Abdominal    float64 `gorm:"type:decimal(10,2)"`
+	FrontThigh   float64 `gorm:"column:front_thigh;type:decimal(10,2)"`
+	MedialCalf   float64 `gorm:"column:Medial_calf;type:decimal(10,2)"`
 
 	// Girths/Circumferences
-	head       float64 `gorm:"type:decimal(10,2)"`
-	neck       float64 `gorm:"type:decimal(10,2)"`
-	armRelaxed float64 `gorm:"column:arm_relaxed;type:decimal(10,2)"`
-	armFlex    float64 `gorm:"column:arm_flex;type:decimal(10,2)"`
-	forearm    float64 `gorm:"type:decimal(10,2)"`
-	wrist      float64 `gorm:"type:decimal(10,2)"`
-	chest      float64 `gorm:"type:decimal(10,2)"`
-	waist      float64 `gorm:"type:decimal(10,2)"`
-	hip        float64 `gorm:"type:decimal(10,2)"`
-	thighHigh  float64 `gorm:"column:thigh_high;type:decimal(10,2)"`
-	thighLow   float64 `gorm:"column:thigh_low;type:decimal(10,2)"`
-	calf       float64 `gorm:"type:decimal(10,2)"`
-	ankle      float64 `gorm:"type:decimal(10,2)"`
+	Head       float64 `gorm:"type:decimal(10,2)"`
+	Neck       float64 `gorm:"type:decimal(10,2)"`
+	ArmRelaxed float64 `gorm:"column:arm_relaxed;type:decimal(10,2)"`
+	ArmFlex    float64 `gorm:"column:arm_flex;type:decimal(10,2)"`
+	Forearm    float64 `gorm:"type:decimal(10,2)"`
+	Wrist      float64 `gorm:"type:decimal(10,2)"`
+	Chest      float64 `gorm:"type:decimal(10,2)"`
+	Waist      float64 `gorm:"type:decimal(10,2)"`
+	Hip        float64 `gorm:"type:decimal(10,2)"`
+	ThighHigh  float64 `gorm:"column:thigh_high;type:decimal(10,2)"`
+	ThighLow   float64 `gorm:"column:thigh_low;type:decimal(10,2)"`
+	Calf       float64 `gorm:"type:decimal(10,2)"`
+	Ankle      float64 `gorm:"type:decimal(10,2)"`
 
 	// Metadata & Relations
-	createdAt time.Time `gorm:"column:created_at"`
-	updatedAt time.Time `gorm:"column:updated_at"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
 
-	clientId uuid.UUID `gorm:"type:uuid;not null;index"`
+	ClientId uuid.UUID `gorm:"type:uuid;not null;index"`
 }
 
-func (e *entityDB) toEntity() (BodyMeasurement, *core.BaseError) {
+func (e *bodyMeasurementDB) toEntity() (BodyMeasurement, *core.BaseError) {
 	var errList []string
 
 	validate := func(val float64, unit valueobject.MeasureUnit) valueobject.Measurer {
 		m, err := valueobject.NewMeasurement(val, unit)
 		if err != nil {
-			errList = append(errList, *err)
+			errList = append(errList, err.Details...)
 		}
 		return m
 	}
 
 	// Basic Stats
-	mass := validate(e.mass, valueobject.KG)
-	stature := validate(e.stature, valueobject.CM)
-	sittingHeight := validate(e.sittingHeight, valueobject.CM)
-	armSpan := validate(e.armSpan, valueobject.CM)
+	mass := validate(e.Mass, valueobject.KG)
+	stature := validate(e.Stature, valueobject.CM)
+	sittingHeight := validate(e.SittingHeight, valueobject.CM)
+	armSpan := validate(e.ArmSpan, valueobject.CM)
 
 	/* SkinFolds - Standardized to MM usually, change to CM if preferred */
-	triceps := validate(e.triceps, valueobject.MM)
-	subscapular := validate(e.subscapular, valueobject.MM)
-	biceps := validate(e.biceps, valueobject.MM)
-	iliacCrest := validate(e.iliacCrest, valueobject.MM)
-	supraspinale := validate(e.supraspinale, valueobject.MM)
-	abdominal := validate(e.abdominal, valueobject.MM)
-	frontThigh := validate(e.frontThigh, valueobject.MM)
-	medialCalf := validate(e.medialCalf, valueobject.MM)
+	triceps := validate(e.Triceps, valueobject.MM)
+	subscapular := validate(e.Subscapular, valueobject.MM)
+	biceps := validate(e.Biceps, valueobject.MM)
+	iliacCrest := validate(e.IliacCrest, valueobject.MM)
+	supraspinale := validate(e.Supraspinale, valueobject.MM)
+	abdominal := validate(e.Abdominal, valueobject.MM)
+	frontThigh := validate(e.FrontThigh, valueobject.MM)
+	medialCalf := validate(e.MedialCalf, valueobject.MM)
 
 	/* Girths */
-	head := validate(e.head, valueobject.CM)
-	neck := validate(e.neck, valueobject.CM)
-	armRelaxed := validate(e.armRelaxed, valueobject.CM)
-	armFlex := validate(e.armFlex, valueobject.CM)
-	forearm := validate(e.forearm, valueobject.CM)
-	wrist := validate(e.wrist, valueobject.CM)
-	chest := validate(e.chest, valueobject.CM)
-	waist := validate(e.waist, valueobject.CM)
-	hip := validate(e.hip, valueobject.CM)
-	thighHigh := validate(e.thighHigh, valueobject.CM)
-	thighLow := validate(e.thighLow, valueobject.CM)
-	calf := validate(e.calf, valueobject.CM)
-	ankle := validate(e.ankle, valueobject.CM)
+	head := validate(e.Head, valueobject.CM)
+	neck := validate(e.Neck, valueobject.CM)
+	armRelaxed := validate(e.ArmRelaxed, valueobject.CM)
+	armFlex := validate(e.ArmFlex, valueobject.CM)
+	forearm := validate(e.Forearm, valueobject.CM)
+	wrist := validate(e.Wrist, valueobject.CM)
+	chest := validate(e.Chest, valueobject.CM)
+	waist := validate(e.Waist, valueobject.CM)
+	hip := validate(e.Hip, valueobject.CM)
+	thighHigh := validate(e.ThighHigh, valueobject.CM)
+	thighLow := validate(e.ThighLow, valueobject.CM)
+	calf := validate(e.Calf, valueobject.CM)
+	ankle := validate(e.Ankle, valueobject.CM)
 
 	if len(errList) > 0 {
 		return nil, core.CorrupetedDatabase(errList)
@@ -160,7 +160,7 @@ type Repository interface {
 }
 
 func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
-	if err := db.AutoMigrate(&entityDB{}); err != nil {
+	if err := db.AutoMigrate(&bodyMeasurementDB{}); err != nil {
 		return nil, core.UnexpectedError(err.Error())
 	}
 	return &repository{db}, nil
@@ -170,7 +170,7 @@ func (r *repository) GetAllByUser(
 	ctx context.Context,
 	userID valueobject.Identifier,
 ) ([]BodyMeasurement, *core.BaseError) {
-	var rawList []entityDB
+	var rawList []bodyMeasurementDB
 
 	result := r.db.WithContext(ctx).Where("user_id = ?", userID.Key()).Find(&rawList)
 	if result.Error != nil {
@@ -198,7 +198,7 @@ func (r *repository) DateAlreadyFill(
 	var count int64
 
 	result := r.db.WithContext(ctx).
-		Model(&entityDB{}).
+		Model(&bodyMeasurementDB{}).
 		Where("created_at::date = ?::date AND client_id = ?", date.ToTime(), userId.Key()).
 		Count(&count)
 
@@ -215,10 +215,10 @@ func (r *repository) GetByDate(
 	date valueobject.Dater,
 	userId valueobject.Identifier,
 ) (BodyMeasurement, *core.BaseError) {
-	var raw entityDB
+	var raw bodyMeasurementDB
 
 	result := r.db.WithContext(ctx).
-		First(&raw, "created_at = ? AND user_id = ?", date.ToTime(), userId.Key())
+		First(&raw, "created_at::date = ?::date AND user_id = ?", date.ToTime(), userId.Key())
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, BodyMeasurementNotFound(date.ToTime().Format("2000-01-01"))
@@ -239,11 +239,11 @@ func (r *repository) GetByRange(
 	rangeDate bodyMeasurementDtos.RangeDate,
 	clientId valueobject.Identifier,
 ) ([]BodyMeasurement, *core.BaseError) {
-	var rawList []entityDB
+	var rawList []bodyMeasurementDB
 
 	result := r.db.WithContext(ctx).
 		Where("user_id = ?", clientId.Key()).
-		Where("created_at BETWEEN ? AND ?", rangeDate.Start().ToTime(), rangeDate.End().ToTime()).
+		Where("created_at:date BETWEEN ?::date AND ?::date", rangeDate.Start().ToTime(), rangeDate.End().ToTime()).
 		Order("created_at ASC").
 		Find(&rawList)
 
@@ -268,7 +268,7 @@ func (r *repository) GetById(
 	ctx context.Context,
 	id valueobject.Identifier,
 ) (BodyMeasurement, *core.BaseError) {
-	var raw entityDB
+	var raw bodyMeasurementDB
 
 	result := r.db.WithContext(ctx).First(&raw, "id = ?", id.Key())
 	if result.Error != nil {
@@ -290,7 +290,8 @@ func (r *repository) Create(
 	ctx context.Context,
 	measurement BodyMeasurement,
 ) *core.BaseError {
-	result := r.db.WithContext(ctx).Create(measurement.ToDTO())
+	data := measurement.ToDB()
+	result := r.db.WithContext(ctx).Create(&data)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
@@ -298,7 +299,7 @@ func (r *repository) Create(
 }
 
 func (r *repository) Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError {
-	result := r.db.WithContext(ctx).Delete(&entityDB{}, id.Key())
+	result := r.db.WithContext(ctx).Delete(&bodyMeasurementDB{}, id.Key())
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}

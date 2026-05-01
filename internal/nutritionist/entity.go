@@ -15,6 +15,7 @@ type Nutritionist interface {
 	UpdatePassword(password valueobject.Passworder)
 
 	RUT() valueobject.RUTer
+	UpdatedAt() valueobject.Dater
 	IsEmailConfirmed() bool
 	MarkAsEmailAddressConfirmed()
 
@@ -67,6 +68,10 @@ func (e *Entity) IsEmailConfirmed() bool {
 	return e.isEmailConfirmed
 }
 
+func (e *Entity) UpdatedAt() valueobject.Dater {
+	return e.updatedAt
+}
+
 func (e *Entity) MarkAsEmailAddressConfirmed() {
 	e.isEmailConfirmed = true
 	e.updatedAt = valueobject.NewTracker()
@@ -102,6 +107,30 @@ func FromRegisterDTO(data nutritionistDtos.RegisterNutritionist) Nutritionist {
 		rut:              data.RUT(),
 		createdAt:        now,
 		updatedAt:        now,
+	}
+}
+
+func FromDB(
+	id valueobject.Identifier,
+	name valueobject.Namer,
+	emailAddress valueobject.Emailer,
+	isEmailConfirmed bool,
+	birthDate valueobject.Dater,
+	password valueobject.Passworder,
+	rut valueobject.RUTer,
+	createdAt valueobject.Dater,
+	updatedAt valueobject.Dater,
+) Nutritionist {
+	return &Entity{
+		id:               id,
+		name:             name,
+		emailAddress:     emailAddress,
+		isEmailConfirmed: isEmailConfirmed,
+		birthDate:        birthDate,
+		password:         password,
+		rut:              rut,
+		createdAt:        createdAt,
+		updatedAt:        updatedAt,
 	}
 }
 

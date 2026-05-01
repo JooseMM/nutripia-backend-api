@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -93,9 +94,9 @@ func (p *password) IsEqual(rawPassword string) bool {
 	return false
 }
 
-func PasswordFromDB(hash string) (Passworder, []string) {
+func PasswordFromDB(hash string) (Passworder, *core.BaseError) {
 	if hash == "" {
-		return nil, []string{"Corrupted password comming from database"}
+		return nil, core.ValidationError([]string{"Corrupted password comming from database"})
 	}
 
 	return &password{
@@ -103,9 +104,9 @@ func PasswordFromDB(hash string) (Passworder, []string) {
 	}, nil
 }
 
-func NewPassword(p string) (Passworder, []string) {
+func NewPassword(p string) (Passworder, *core.BaseError) {
 	if p == "" {
-		return nil, []string{"Password: is required"}
+		return nil, core.ValidationError([]string{"Password: is required"})
 	}
 
 	var errList []string
@@ -146,17 +147,17 @@ func NewPassword(p string) (Passworder, []string) {
 
 	hash, err := hashPassword(p)
 	if err != nil {
-		errList = append(errList, "Password: "+err.Error())
+		errList = append(errList, err.Details...)
 	}
 
 	if len(errList) > 0 {
-		return nil, errList
+		return nil, core.ValidationError(errList)
 	}
 
 	return &password{hash}, nil
 }
 
-func hashPassword(password string) (string, error) {
+func hashPassword(password string) (string, *core.BaseError) {
 	p := &params{
 		memory:      64 * 1024, // 64MB
 		iterations:  3,
@@ -168,7 +169,7 @@ func hashPassword(password string) (string, error) {
 	// 1. Generate a random salt
 	salt := make([]byte, p.saltLength)
 	if _, err := rand.Read(salt); err != nil {
-		return "", err
+		return "", core.UnexpectedError("Password: " + err.Error())
 	}
 
 	// 2. Generate the hash

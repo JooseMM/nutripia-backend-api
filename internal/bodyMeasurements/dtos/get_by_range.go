@@ -42,10 +42,10 @@ func NewRangeDate(rawStart string, rawEnd string) (*RangeDate, *core.BaseError) 
 	}
 
 	startDater, e := valueobject.NewRangeDate(start)
-	errList = append(errList, e...)
+	errList = append(errList, e.Details...)
 
 	endDater, e := valueobject.NewRangeDate(end)
-	errList = append(errList, e...)
+	errList = append(errList, e.Details...)
 
 	if len(errList) > 0 {
 		return nil, core.ValidationError(errList)

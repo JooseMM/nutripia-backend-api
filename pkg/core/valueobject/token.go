@@ -34,7 +34,7 @@ type Token struct {
 
 func PasswordResetTokenFromString(raw string) (Tokenizer, *core.BaseError) {
 	if len(raw) < passwordResetTokenLength {
-		return nil, core.UnexpectedError("Token: wrong format")
+		return nil, core.UnexpectedError("Token: Wrong password-reset token format")
 	}
 
 	return &Token{
@@ -59,7 +59,7 @@ func NewSessionToken() (Tokenizer, *core.BaseError) {
 
 func SessionTokenFromString(raw string) (Tokenizer, *core.BaseError) {
 	if len(raw) < sessionTokenLength {
-		return nil, core.UnexpectedError("Token: wrong format")
+		return nil, core.UnexpectedError("Token: wrong session format token")
 	}
 
 	return &Token{
@@ -104,7 +104,7 @@ func NewEmailConfirmationToken() (Tokenizer, *core.BaseError) {
 
 func EmailConfirmationTokenFromString(raw string) (Tokenizer, *core.BaseError) {
 	if len(raw) < emailConfirmationTokenLength {
-		return nil, core.UnexpectedError("Token: wrong format")
+		return nil, core.UnexpectedError("Token: wrong email-confirmation token format")
 	}
 
 	return &Token{

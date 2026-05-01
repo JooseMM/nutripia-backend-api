@@ -6,8 +6,8 @@ import (
 
 	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/dtos"
 	authenticationDtos "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/dtos"
-	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
+	"github.com/JooseMM/nutripia-backend-api/pkg/request"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 )
 
@@ -31,16 +31,14 @@ func NewAuthenticationHandler(service IAuthenticationService) Handler {
 func (h *handler) RegisterNutritionist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, errList := core.DecodeJSON[nutritionistDtos.RawRegisterNutritionist](w, r)
-	if errList != nil {
-		err := core.ValidationError(errList)
+	dto, err := request.DecodeJSON[nutritionistDtos.RawRegisterNutritionist](w, r)
+	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
 	payload, err := dto.ToValueObject()
 	if err != nil {
-		err := core.ValidationError(errList)
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
@@ -57,10 +55,9 @@ func (h *handler) RegisterNutritionist(w http.ResponseWriter, r *http.Request) {
 func (h *handler) LoginNutritionist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, errList := core.DecodeJSON[authenticationDtos.RawLoginRequest](w, r)
-	if errList != nil {
-		e := core.ValidationError(errList)
-		response.WriteJSON(w, e.StatusCode, e)
+	dto, err := request.DecodeJSON[authenticationDtos.RawLoginRequest](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
@@ -90,10 +87,9 @@ func (h *handler) LoginNutritionist(w http.ResponseWriter, r *http.Request) {
 func (h *handler) ConfirmNutritionistEmail(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, parseErr := core.DecodeJSON[authenticationDtos.Token](w, r)
-	if parseErr != nil {
-		e := core.ValidationError(parseErr)
-		response.WriteJSON(w, e.StatusCode, e)
+	dto, err := request.DecodeJSON[authenticationDtos.Token](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
@@ -120,17 +116,15 @@ func (h *handler) ConfirmNutritionistEmail(w http.ResponseWriter, r *http.Reques
 func (h *handler) SendResetPasswordToken(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, parseErr := core.DecodeJSON[authenticationDtos.SendResetPasswordTokenRequest](w, r)
-	if parseErr != nil {
-		e := core.ValidationError(parseErr)
-		response.WriteJSON(w, e.StatusCode, e)
+	dto, err := request.DecodeJSON[authenticationDtos.SendResetPasswordTokenRequest](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	email, parseErr := valueobject.NewEmailAddress(dto.EmailAddress)
-	if parseErr != nil {
-		e := core.ValidationError(parseErr)
-		response.WriteJSON(w, e.StatusCode, e)
+	email, err := valueobject.NewEmailAddress(dto.EmailAddress)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
@@ -144,10 +138,9 @@ func (h *handler) SendResetPasswordToken(w http.ResponseWriter, r *http.Request)
 func (h *handler) VerifyResetPasswordToken(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, parseErr := core.DecodeJSON[authenticationDtos.Token](w, r)
-	if parseErr != nil {
-		e := core.ValidationError(parseErr)
-		response.WriteJSON(w, e.StatusCode, e)
+	dto, err := request.DecodeJSON[authenticationDtos.Token](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
@@ -173,10 +166,9 @@ func (h *handler) VerifyResetPasswordToken(w http.ResponseWriter, r *http.Reques
 func (h *handler) CompleteResetPassword(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, parseErr := core.DecodeJSON[authenticationDtos.ChangePasswordRequest](w, r)
-	if parseErr != nil {
-		e := core.ValidationError(parseErr)
-		response.WriteJSON(w, e.StatusCode, e)
+	dto, err := request.DecodeJSON[authenticationDtos.ChangePasswordRequest](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
@@ -184,8 +176,7 @@ func (h *handler) CompleteResetPassword(w http.ResponseWriter, r *http.Request) 
 
 	password, err := valueobject.NewPassword(dto.Password)
 	if err != nil {
-		e := core.ValidationError(err)
-		response.WriteJSON(w, e.StatusCode, e)
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 

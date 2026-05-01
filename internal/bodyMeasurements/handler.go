@@ -5,8 +5,8 @@ import (
 
 	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/dtos"
 	"github.com/JooseMM/nutripia-backend-api/internal/clients"
-	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
+	"github.com/JooseMM/nutripia-backend-api/pkg/request"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 )
 
@@ -73,10 +73,9 @@ func (h *handler) GetByRange(w http.ResponseWriter, r *http.Request) {
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, errList := core.DecodeJSON[bodyMeasurementDtos.RawCreateMeasurement](w, r)
-	if errList != nil {
-		e := core.ValidationError(errList)
-		response.WriteJSON(w, e.StatusCode, e)
+	dto, err := request.DecodeJSON[bodyMeasurementDtos.RawCreateMeasurement](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 

@@ -1,5 +1,7 @@
 package valueobject
 
+import "github.com/JooseMM/nutripia-backend-api/pkg/core"
+
 type MeasureUnit float64
 
 const (
@@ -34,10 +36,9 @@ func (m *measurement) Unit() MeasureUnit {
 	return m.unit
 }
 
-func NewMeasurement(raw float64, unitType MeasureUnit) (Measurer, *string) {
+func NewMeasurement(raw float64, unitType MeasureUnit) (Measurer, *core.BaseError) {
 	if raw < 0 {
-		e := "unit: must not be lower than zero "
-		return nil, &e
+		return nil, core.ValidationError([]string{"unit: must not be lower than zero "})
 	}
 
 	return &measurement{

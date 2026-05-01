@@ -21,27 +21,27 @@ func (dto *RawRegisterNutritionist) ToValueObject() (*RegisterNutritionist, *cor
 
 	name, nameErr := valueobject.NewName(dto.Firstname, dto.Lastname)
 	if nameErr != nil {
-		errList = append(errList, nameErr...)
+		errList = append(errList, nameErr.Details...)
 	}
 
 	email, emailErr := valueobject.NewEmailAddress(dto.EmailAddress)
 	if emailErr != nil {
-		errList = append(errList, emailErr...)
+		errList = append(errList, emailErr.Details...)
 	}
 
 	password, passwordErr := valueobject.NewPassword(dto.Password)
 	if passwordErr != nil {
-		errList = append(errList, passwordErr...)
+		errList = append(errList, passwordErr.Details...)
 	}
 
 	birthDate, birthDateErr := valueobject.NewBirthDate(dto.BirthDate)
 	if birthDateErr != nil {
-		errList = append(errList, birthDateErr...)
+		errList = append(errList, birthDateErr.Details...)
 	}
 
 	rut, rutErr := valueobject.NewRUT(dto.RUT)
 	if rutErr != nil {
-		errList = append(errList, rutErr...)
+		errList = append(errList, rutErr.Details...)
 	}
 
 	if len(errList) > 0 {

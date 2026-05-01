@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/dtos"
-	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
+	"github.com/JooseMM/nutripia-backend-api/pkg/request"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 )
 
@@ -56,10 +56,9 @@ func (h *handler) UpdateNutritionistById(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	payload, errMessage := core.DecodeJSON[nutritionistDtos.UpdateNutritionist](w, r)
-	if errMessage != nil {
-		res := core.ValidationError(errMessage)
-		response.WriteJSON(w, http.StatusBadRequest, res)
+	payload, err := request.DecodeJSON[nutritionistDtos.UpdateNutritionist](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 

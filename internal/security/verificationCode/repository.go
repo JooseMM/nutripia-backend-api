@@ -11,50 +11,50 @@ import (
 	"gorm.io/gorm"
 )
 
-type entityDB struct {
-	id        uuid.UUID                 `gorm:"type:uuid;primaryKey"`
-	token     string                    `gorm:"type:varchar(255);not null;index"`
-	userId    uuid.UUID                 `gorm:"type:uuid;not null;index"`
-	tokenType valueobject.TokenTypeEnum `gorm:"type:varchar(50);not null"`
-	createdAt time.Time                 `gorm:"not null"`
-	expiredAt time.Time                 `gorm:"not null;index"`
+type verificationCodes struct {
+	Id        uuid.UUID                 `gorm:"type:uuid;primaryKey"`
+	Token     string                    `gorm:"type:varchar(255);not null;index"`
+	UserId    uuid.UUID                 `gorm:"type:uuid;not null;index"`
+	TokenType valueobject.TokenTypeEnum `gorm:"type:int;not null"`
+	CreatedAt time.Time                 `gorm:"not null"`
+	ExpiredAt time.Time                 `gorm:"not null;index"`
 }
 
-func (e *entityDB) ToEntity() (*verificationToken, *core.BaseError) {
+func (e *verificationCodes) ToEntity() (*verificationToken, *core.BaseError) {
 	var token valueobject.Tokenizer
 
-	switch e.tokenType {
+	switch e.TokenType {
 	case valueobject.EmailConfirmation:
-		t, err := valueobject.PasswordResetTokenFromString(e.token)
+		t, err := valueobject.EmailConfirmationTokenFromString(e.Token)
 		if err != nil {
-			return nil, err
+			return nil, core.CorrupetedDatabase(err.Details)
 		}
 		token = t
 	case valueobject.PasswordReset:
-		t, err := valueobject.EmailConfirmationTokenFromString(e.token)
+		t, err := valueobject.PasswordResetTokenFromString(e.Token)
 		if err != nil {
-			return nil, err
+			return nil, core.CorrupetedDatabase(err.Details)
 		}
 		token = t
 	}
 
-	created, err := valueobject.NewTrackerFromTime(&e.createdAt)
+	created, err := valueobject.NewTrackerFromTime(&e.CreatedAt)
 	if err != nil {
-		e := core.CorrupetedDatabase(err)
+		e := core.CorrupetedDatabase(err.Details)
 		return nil, e
 	}
 
-	expired, err := valueobject.NewTrackerFromTime(&e.expiredAt)
+	expired, err := valueobject.ExpiredDateFromTime(e.ExpiredAt)
 	if err != nil {
-		e := core.CorrupetedDatabase(err)
+		e := core.CorrupetedDatabase(err.Details)
 		return nil, e
 	}
 
 	resp := verificationToken{
-		id:        valueobject.IdentifierFromValue(e.id),
+		id:        valueobject.IdentifierFromValue(e.Id),
 		token:     token,
-		tokenType: e.tokenType,
-		userId:    valueobject.IdentifierFromValue(e.id),
+		tokenType: e.TokenType,
+		userId:    valueobject.IdentifierFromValue(e.UserId),
 		createdAt: created,
 		expiredAt: expired,
 	}
@@ -62,7 +62,7 @@ func (e *entityDB) ToEntity() (*verificationToken, *core.BaseError) {
 	return &resp, nil
 }
 
-func (entityDB) TableName() string {
+func (verificationCodes) TableName() string {
 	return "verification_tokens"
 }
 
@@ -83,7 +83,7 @@ type Repository interface {
 }
 
 func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
-	if err := db.AutoMigrate(&entityDB{}); err != nil {
+	if err := db.AutoMigrate(&verificationCodes{}); err != nil {
 		return nil, core.UnexpectedError(err.Error())
 	}
 	return &entityRepository{db}, nil
@@ -93,9 +93,9 @@ func (s *entityRepository) GetByToken(
 	ctx context.Context,
 	token valueobject.Tokenizer,
 ) (*verificationToken, *core.BaseError) {
-	var dto entityDB
+	var dto verificationCodes
 
-	result := s.db.WithContext(ctx).Find(&dto, "token = ?", token.String())
+	result := s.db.WithContext(ctx).First(&dto, "token = ?", token.String())
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, VerificationCodeNotFound()
@@ -103,6 +103,7 @@ func (s *entityRepository) GetByToken(
 
 		return nil, core.UnexpectedError(result.Error.Error())
 	}
+
 
 	entity, err := dto.ToEntity()
 	if err != nil {
@@ -117,7 +118,7 @@ func (s *entityRepository) Create(
 	verificationToken VerificationManager,
 ) *core.BaseError {
 	dto := verificationToken.ToDB()
-	result := s.db.WithContext(ctx).Create(dto)
+	result := s.db.WithContext(ctx).Create(&dto)
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}
@@ -130,7 +131,7 @@ func (s *entityRepository) Delete(
 ) *core.BaseError {
 	result := s.db.WithContext(ctx).
 		Where("id = ?", id).
-		Delete(&entityDB{})
+		Delete(&verificationCodes{})
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())
 	}

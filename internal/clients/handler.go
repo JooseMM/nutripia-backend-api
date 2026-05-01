@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	clientDtos "github.com/JooseMM/nutripia-backend-api/internal/clients/dtos"
-	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
+	"github.com/JooseMM/nutripia-backend-api/pkg/request"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 	"github.com/google/uuid"
 )
@@ -32,10 +32,9 @@ func NewClientHandler(service ClientManager) Handler {
 func (h *handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, parseErr := core.DecodeJSON[clientDtos.RawCreateClientRequest](w, r)
-	if parseErr != nil {
-		responseErr := core.ValidationError(parseErr)
-		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+	dto, err := request.DecodeJSON[clientDtos.RawCreateClientRequest](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
@@ -147,10 +146,9 @@ func (h *handler) UpdateClientById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rawPayload, decodeErr := core.DecodeJSON[clientDtos.RawUpdateClientRequest](w, r)
-	if decodeErr != nil {
-		responseErr := core.ValidationError(decodeErr)
-		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+	rawPayload, err := request.DecodeJSON[clientDtos.RawUpdateClientRequest](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 

@@ -1,5 +1,7 @@
 package valueobject
 
+import "github.com/JooseMM/nutripia-backend-api/pkg/core"
+
 type RUTer interface {
 	ToString() string
 }
@@ -12,6 +14,6 @@ func (r *Rut) ToString() string {
 	return r.value
 }
 
-func NewRUT(raw string) (RUTer, []string) {
+func NewRUT(raw string) (RUTer, *core.BaseError) {
 	return &Rut{value: raw}, nil
 }

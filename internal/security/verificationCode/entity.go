@@ -5,7 +5,7 @@ import (
 )
 
 type VerificationManager interface {
-	ToDB() entityDB
+	ToDB() verificationCodes
 	IsExpired() bool
 }
 
@@ -18,13 +18,13 @@ type verificationToken struct {
 	expiredAt valueobject.Dater
 }
 
-func (v *verificationToken) ToDB() entityDB {
-	return entityDB{
-		id:        v.id.Key(),
-		token:     v.token.String(),
-		userId:    v.userId.Key(),
-		createdAt: v.createdAt.ToTime(),
-		expiredAt: v.expiredAt.ToTime(),
+func (v *verificationToken) ToDB() verificationCodes {
+	return verificationCodes{
+		Id:        v.id.Key(),
+		Token:     v.token.String(),
+		UserId:    v.userId.Key(),
+		CreatedAt: v.createdAt.ToTime(),
+		ExpiredAt: v.expiredAt.ToTime(),
 	}
 }
 

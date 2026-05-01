@@ -13,8 +13,12 @@ type RawLoginRequest struct {
 
 func (r *RawLoginRequest) ToValueObject() (*LoginRequest, *core.BaseError) {
 	var errList []string
+
 	email, err := valueobject.NewEmailAddress(r.EmailAddress)
-	errList = append(errList, err...)
+	if err != nil {
+		errList = append(errList, err.Details...)
+
+	}
 
 	if r.Password == "" {
 		errList = append(errList, "password: is required")
