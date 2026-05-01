@@ -11,7 +11,7 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 )
 
-type IAuthenticationHandler interface {
+type Handler interface {
 	RegisterNutritionist(w http.ResponseWriter, r *http.Request)
 	LoginNutritionist(w http.ResponseWriter, r *http.Request)
 	ConfirmNutritionistEmail(w http.ResponseWriter, r *http.Request)
@@ -20,15 +20,15 @@ type IAuthenticationHandler interface {
 	CompleteResetPassword(w http.ResponseWriter, r *http.Request)
 }
 
-type AuthenticationHandler struct {
+type handler struct {
 	service IAuthenticationService
 }
 
-func NewAuthenticationHandler(service IAuthenticationService) IAuthenticationHandler {
-	return &AuthenticationHandler{service}
+func NewAuthenticationHandler(service IAuthenticationService) Handler {
+	return &handler{service}
 }
 
-func (h *AuthenticationHandler) RegisterNutritionist(w http.ResponseWriter, r *http.Request) {
+func (h *handler) RegisterNutritionist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	dto, errList := core.DecodeJSON[nutritionistDtos.RawRegisterNutritionist](w, r)
@@ -54,7 +54,7 @@ func (h *AuthenticationHandler) RegisterNutritionist(w http.ResponseWriter, r *h
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *AuthenticationHandler) LoginNutritionist(w http.ResponseWriter, r *http.Request) {
+func (h *handler) LoginNutritionist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	dto, errList := core.DecodeJSON[authenticationDtos.RawLoginRequest](w, r)
@@ -87,7 +87,7 @@ func (h *AuthenticationHandler) LoginNutritionist(w http.ResponseWriter, r *http
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *AuthenticationHandler) ConfirmNutritionistEmail(w http.ResponseWriter, r *http.Request) {
+func (h *handler) ConfirmNutritionistEmail(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	dto, parseErr := core.DecodeJSON[authenticationDtos.Token](w, r)
@@ -117,7 +117,7 @@ func (h *AuthenticationHandler) ConfirmNutritionistEmail(w http.ResponseWriter, 
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *AuthenticationHandler) SendResetPasswordToken(w http.ResponseWriter, r *http.Request) {
+func (h *handler) SendResetPasswordToken(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	dto, parseErr := core.DecodeJSON[authenticationDtos.SendResetPasswordTokenRequest](w, r)
@@ -141,7 +141,7 @@ func (h *AuthenticationHandler) SendResetPasswordToken(w http.ResponseWriter, r 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *AuthenticationHandler) VerifyResetPasswordToken(w http.ResponseWriter, r *http.Request) {
+func (h *handler) VerifyResetPasswordToken(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	dto, parseErr := core.DecodeJSON[authenticationDtos.Token](w, r)
@@ -170,7 +170,7 @@ func (h *AuthenticationHandler) VerifyResetPasswordToken(w http.ResponseWriter, 
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *AuthenticationHandler) CompleteResetPassword(w http.ResponseWriter, r *http.Request) {
+func (h *handler) CompleteResetPassword(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	dto, parseErr := core.DecodeJSON[authenticationDtos.ChangePasswordRequest](w, r)

@@ -31,7 +31,7 @@ type service struct {
 	Repo Repository
 }
 
-func NewClientService(repo Repository) ClientManager {
+func NewService(repo Repository) ClientManager {
 	return &service{repo}
 }
 

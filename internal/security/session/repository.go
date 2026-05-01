@@ -35,9 +35,9 @@ type Repository interface {
 	DeleteOne(ctx context.Context, sessionId valueobject.Identifier) *core.BaseError
 }
 
-func NewSessionRepository(db *gorm.DB) (Repository, error) {
+func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
 	if err := db.AutoMigrate(&entityDB{}); err != nil {
-		return nil, err
+		return nil, core.UnexpectedError(err.Error())
 	}
 
 	return &repo{db}, nil

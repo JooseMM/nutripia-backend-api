@@ -1,7 +1,6 @@
 package bodyMeasurement
 
 import (
-	"encoding/json"
 	"net/http"
 
 	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/dtos"
@@ -9,32 +8,31 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
-	"github.com/google/uuid"
 )
 
-type IBodyMeasurementHandler interface {
+type Handler interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	GetById(w http.ResponseWriter, r *http.Request)
 	GetByRange(w http.ResponseWriter, r *http.Request)
 	DeleteById(w http.ResponseWriter, r *http.Request)
 }
 
-type BodyMeasurementHandler struct {
+type handler struct {
 	ClientService          clients.ClientManager
 	bodyMeasurementService BodyMeasurementManager
 }
 
-func NewBodyMeasurementHandler(
+func NewHandler(
 	bodyMeasurementService BodyMeasurementManager,
 	userService clients.ClientManager,
-) IBodyMeasurementHandler {
-	return &BodyMeasurementHandler{
+) Handler {
+	return &handler{
 		ClientService:          userService,
 		bodyMeasurementService: bodyMeasurementService,
 	}
 }
 
-func (h *BodyMeasurementHandler) GetByRange(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetByRange(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	queryParam := r.URL.Query()
 
@@ -44,17 +42,16 @@ func (h *BodyMeasurementHandler) GetByRange(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	id, err := valueobject.IdentifierFromString(r.PathValue("userId"))
+	clientId, err := valueobject.IdentifierFromString(r.PathValue("userId"))
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
 	measurements, err := h.bodyMeasurementService.GetByRange(
-		&userId,
-		&start,
-		&endDate,
 		r.Context(),
+		clientId,
+		*dto,
 	)
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
@@ -63,36 +60,44 @@ func (h *BodyMeasurementHandler) GetByRange(w http.ResponseWriter, r *http.Reque
 
 	var dtos []bodyMeasurementDtos.BodyMeasurementDto
 	for _, bm := range measurements {
-		dtos = append(dtos, *bm.ToDTO())
+		dtos = append(dtos, bm.ToDTO())
 	}
 	apiResponse := &response.ApiResponse[[]bodyMeasurementDtos.BodyMeasurementDto]{
 		Success: true,
-		Data:    &dtos,
+		Data:    dtos,
 	}
 
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *BodyMeasurementHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var dto bodyMeasurementDtos.CreateMeasurementDto
 
-	err := json.NewDecoder(r.Body).Decode(&dto)
-	if err != nil {
-		http.Error(w, "Bad request: "+err.Error(), http.StatusBadRequest)
+	dto, errList := core.DecodeJSON[bodyMeasurementDtos.RawCreateMeasurement](w, r)
+	if errList != nil {
+		e := core.ValidationError(errList)
+		response.WriteJSON(w, e.StatusCode, e)
 		return
 	}
-	if err := dto.Validate(); err != nil {
+
+	payload, err := dto.ToValueObject()
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+	}
+
+	clientId, err := valueobject.IdentifierFromString(r.PathValue("userId"))
+	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	_, userErr := h.ClientService.GetById(&dto.ClientId, r.Context())
-	if userErr != nil {
-		response.WriteJSON(w, userErr.StatusCode, userErr)
+	_, clientErr := h.ClientService.GetById(r.Context(), clientId)
+	if clientErr != nil {
+		response.WriteJSON(w, clientErr.StatusCode, clientErr)
+		return
 	}
 
-	createdId, failure := h.bodyMeasurementService.Create(&dto, r.Context())
+	createdId, failure := h.bodyMeasurementService.Create(r.Context(), *payload, clientId)
 	if failure != nil {
 		response.WriteJSON(w, failure.StatusCode, failure)
 		return
@@ -101,25 +106,21 @@ func (h *BodyMeasurementHandler) Create(w http.ResponseWriter, r *http.Request) 
 	createdIdStr := createdId.String()
 	responseJson := &response.ApiResponse[string]{
 		Success: true,
-		Data:    &createdIdStr,
+		Data:    createdIdStr,
 	}
 	response.WriteJSON(w, http.StatusCreated, responseJson)
 }
 
-func (h *BodyMeasurementHandler) GetById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	rawId := r.PathValue("id")
 
-	id, parseErr := uuid.Parse(rawId)
-	if parseErr != nil {
-		responseErr := core.ValidationError(
-			[]string{"The identifier provided in the URL path is not a valid UUID format."},
-		)
-		response.WriteJSON(w, responseErr.StatusCode, responseErr)
+	id, err := valueobject.IdentifierFromString(r.PathValue("id"))
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	measurement, err := h.bodyMeasurementService.GetById(&id, r.Context())
+	measurement, err := h.bodyMeasurementService.GetById(r.Context(), id)
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
@@ -134,20 +135,16 @@ func (h *BodyMeasurementHandler) GetById(w http.ResponseWriter, r *http.Request)
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *BodyMeasurementHandler) DeleteById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) DeleteById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	rawId := r.PathValue("id")
 
-	id, parseErr := uuid.Parse(rawId)
-	if parseErr != nil {
-		errResponse := core.ValidationError(
-			[]string{"The identifier provided in the URL path is not a valid UUID format."},
-		)
-		response.WriteJSON(w, errResponse.StatusCode, errResponse)
+	id, err := valueobject.IdentifierFromString(r.PathValue("id"))
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	if err := h.bodyMeasurementService.DeleteOne(&id, r.Context()); err != nil {
+	if err := h.bodyMeasurementService.DeleteOne(r.Context(), id); err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}

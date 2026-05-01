@@ -6,52 +6,64 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist"
 	"github.com/JooseMM/nutripia-backend-api/internal/security/authentication"
 	"github.com/JooseMM/nutripia-backend-api/internal/security/session"
+	verification "github.com/JooseMM/nutripia-backend-api/internal/security/verificationCode"
 	"gorm.io/gorm"
 )
 
 type App struct {
-	NutritionistHandler      nutritionist.INutritionistHandler
-	ClientHandler            clients.IClientHandler
-	MeasurementHandler       bodyMeasurement.IBodyMeasurementHandler
-	AuthenticationHandler    authentication.IAuthenticationHandler
+	NutritionistHandler   nutritionist.Handler
+	ClientHandler         clients.Handler
+	MeasurementHandler    bodyMeasurement.Handler
+	AuthenticationHandler authentication.Handler
 }
 
 func NewApp(db *gorm.DB) *App {
-	clientRepo := clients.NewClientRepository(db)
-	clientService := clients.NewClientService(clientRepo)
+	clientRepo, err := clients.NewRepository(db)
+	if err != nil {
+		panic(err)
+	}
+	clientService := clients.NewService(clientRepo)
 
-	nutritionistRepo := nutritionist.NewNutritionistRepository(db)
-	nutritionistService := nutritionist.NewUserService(nutritionistRepo)
+	nutritionistRepo, err := nutritionist.NewRepository(db)
+	if err != nil {
+		panic(err)
+	}
 
-	measurementRepo := bodyMeasurement.NewBodyMeasurementRepository(db)
-	measurementService := bodyMeasurement.NewBodyMeasurementService(measurementRepo)
-	measurementHandler := bodyMeasurement.NewBodyMeasurementHandler(
+	nutritionistService := nutritionist.NewService(nutritionistRepo)
+
+	measurementRepo, err := bodyMeasurement.NewRepository(db)
+	if err != nil {
+		panic(err)
+	}
+
+	measurementService := bodyMeasurement.NewService(measurementRepo)
+	measurementHandler := bodyMeasurement.NewHandler(
 		measurementService,
 		clientService,
 	)
 
-	sessionRepo := session.NewSessionRepository(db)
-	sessionService := session.NewSessionService(sessionRepo)
-	verificationRepo := verificationCode.NewVerificationCodeRepository(db)
-	verificationService := verificationCode.NewVerificationCodeService(verificationRepo)
+	sessionRepo, err := session.NewRepository(db)
+	if err != nil {
+		panic(err)
+	}
+	sessionService := session.NewService(sessionRepo)
 
-	authenticationService := authentication.NewAuthenticationService(
+	verificationRepo, err := verification.NewRepository(db)
+	if err != nil {
+		panic(err)
+	}
+	verificationService := verification.NewService(verificationRepo)
+
+	authenticationService := authentication.NewService(
 		nutritionistRepo,
 		sessionService,
 		verificationService,
 	)
 	authenticationHandler := authentication.NewAuthenticationHandler(authenticationService)
-
-	authorizationMiddleware := authorization.NewAuthorizationMiddlewares(
-		nutritionistRepo,
-		clientRepo,
-		sessionService,
-	)
 	return &App{
-		ClientHandler:            clients.NewClientHandler(clientService),
-		NutritionistHandler:      nutritionist.NewNutritionistHandler(nutritionistService),
-		MeasurementHandler:       measurementHandler,
-		AuthenticationHandler:    authenticationHandler,
-		AuthorizationMiddlewares: authorizationMiddleware,
+		ClientHandler:         clients.NewClientHandler(clientService),
+		NutritionistHandler:   nutritionist.NewNutritionistHandler(nutritionistService),
+		MeasurementHandler:    measurementHandler,
+		AuthenticationHandler: authenticationHandler,
 	}
 }

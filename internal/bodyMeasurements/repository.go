@@ -159,8 +159,11 @@ type Repository interface {
 	Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError
 }
 
-func NewBodyMeasurementRepository(db *gorm.DB) Repository {
-	return &repository{db}
+func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
+	if err := db.AutoMigrate(&entityDB{}); err != nil {
+		return nil, core.UnexpectedError(err.Error())
+	}
+	return &repository{db}, nil
 }
 
 func (r *repository) GetAllByUser(

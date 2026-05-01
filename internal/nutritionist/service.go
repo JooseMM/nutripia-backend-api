@@ -8,7 +8,7 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
-type INutritionistService interface {
+type NutritionistManager interface {
 	GetById(ctx context.Context, id valueobject.Identifier) (Nutritionist, *core.BaseError)
 	Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError
 	Update(
@@ -19,10 +19,10 @@ type INutritionistService interface {
 }
 
 type NutritionistService struct {
-	Repo RepositoryManager
+	Repo Repository
 }
 
-func NewUserService(repo RepositoryManager) INutritionistService {
+func NewService(repo Repository) NutritionistManager {
 	return &NutritionistService{repo}
 }
 

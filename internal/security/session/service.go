@@ -25,7 +25,7 @@ type SessionManger interface {
 	DeleteAllSessionByUserId(ctx context.Context, userId valueobject.Identifier) *core.BaseError
 }
 
-func NewSessionService(repo Repository) SessionManger {
+func NewService(repo Repository) SessionManger {
 	return &SessionService{repo}
 }
 

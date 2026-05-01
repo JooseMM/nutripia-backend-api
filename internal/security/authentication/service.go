@@ -46,15 +46,15 @@ type IAuthenticationService interface {
 }
 
 type AuthenticationService struct {
-	NutritionistRepo    nutritionist.RepositoryManager
+	NutritionistRepo    nutritionist.Repository
 	SessionService      session.SessionManger
-	VerificationService verification.VerificationCodeService
+	VerificationService verification.VerificationCodeManager
 }
 
-func NewAuthenticationService(
-	nutritionistRepo nutritionist.RepositoryManager,
+func NewService(
+	nutritionistRepo nutritionist.Repository,
 	sessionService session.SessionManger,
-	verificationService verification.VerificationCodeService,
+	verificationService verification.VerificationCodeManager,
 ) IAuthenticationService {
 	return &AuthenticationService{
 		nutritionistRepo,

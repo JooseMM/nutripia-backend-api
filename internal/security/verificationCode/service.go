@@ -7,11 +7,11 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
-type VerificationCodeService struct {
+type service struct {
 	Repo Repository
 }
 
-type IVerificationCodeService interface {
+type VerificationCodeManager interface {
 	Create(ctx context.Context, verificationToken VerificationManager) *core.BaseError
 	Verify(
 		ctx context.Context,
@@ -19,11 +19,11 @@ type IVerificationCodeService interface {
 	) (*valueobject.Identifier, *core.BaseError)
 }
 
-func NewVerificationCodeService(repo Repository) IVerificationCodeService {
-	return &VerificationCodeService{repo}
+func NewService(repo Repository) VerificationCodeManager {
+	return &service{repo}
 }
 
-func (s *VerificationCodeService) Create(
+func (s *service) Create(
 	ctx context.Context,
 	verificationToken VerificationManager,
 ) *core.BaseError {
@@ -34,7 +34,7 @@ func (s *VerificationCodeService) Create(
 	return nil
 }
 
-func (s *VerificationCodeService) Verify(
+func (s *service) Verify(
 	ctx context.Context,
 	token valueobject.Tokenizer,
 ) (*valueobject.Identifier, *core.BaseError) {

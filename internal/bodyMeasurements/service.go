@@ -30,7 +30,7 @@ type service struct {
 	Repo Repository
 }
 
-func NewBodyMeasurementService(repo Repository) BodyMeasurementManager {
+func NewService(repo Repository) BodyMeasurementManager {
 	return &service{repo}
 }
 

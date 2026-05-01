@@ -3,7 +3,6 @@ package storage
 import (
 	"sync"
 
-	bodyMeasurementTypes "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/types"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -27,12 +26,6 @@ func InitDB(dsn string) (*gorm.DB, error) {
 			sqlDB.SetMaxIdleConns(10)   // Keep 10 connections idle
 			sqlDB.SetMaxOpenConns(100)  // Max 100 concurrent connections
 			sqlDB.SetConnMaxLifetime(0) // Reuse connections forever
-
-
-			if err := db.AutoMigrate(&bodyMeasurementTypes.BodyMeasurement{}); err != nil {
-				errBuffer = err
-				return
-			}
 		}
 	})
 	return db, errBuffer

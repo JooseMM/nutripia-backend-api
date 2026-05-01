@@ -54,64 +54,46 @@ func main() {
 	)
 	mux.HandleFunc(
 		"POST /nutritionist/confirm-email",
-		app.AuthenticationHandler.ConfirmedNutritionistEmail,
+		app.AuthenticationHandler.ConfirmNutritionistEmail,
 	)
 
 	/* Nutritionists */
-	mux.Handle("PUT /nutritionist/{id}",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.NutritionistHandler.UpdateNutritionistById,
-		),
+	mux.HandleFunc("PUT /nutritionist/{id}",
+		app.NutritionistHandler.UpdateNutritionistById,
 	)
 
 	/* Clients */
-	mux.Handle(
+	mux.HandleFunc(
 		"POST /nutritionist/client",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.ClientHandler.CreateClient,
-		),
+		app.ClientHandler.CreateClient,
 	)
 
-	mux.Handle("GET /clients/",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.ClientHandler.GetClientByNutritionist,
-		),
+	mux.HandleFunc("GET /clients/",
+		app.ClientHandler.GetClientByNutritionist,
 	)
 
-	mux.Handle("GET /client/{id}",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.ClientHandler.GetClientById,
-		),
+	mux.HandleFunc("GET /client/{id}",
+		app.ClientHandler.GetClientById,
 	)
 
-	mux.Handle("DELETE /nutritionist/client/{id}",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.ClientHandler.DeleteClientById,
-		),
+	mux.HandleFunc("DELETE /nutritionist/client/{id}",
+		app.ClientHandler.DeleteClientById,
 	)
 
-	mux.Handle("PUT /nutritionist/client",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.ClientHandler.UpdateClientById,
-		),
+	mux.HandleFunc("PUT /nutritionist/client",
+		app.ClientHandler.UpdateClientById,
 	)
 
 	/* Measurements */
-	mux.Handle("POST /body-measurements",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.MeasurementHandler.Create,
-		),
+	mux.HandleFunc("POST /body-measurements",
+		app.MeasurementHandler.Create,
 	)
-	mux.Handle("GET /body-measurements/{id}",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.MeasurementHandler.GetById,
-		),
+	mux.HandleFunc("GET /body-measurements/{id}",
+		app.MeasurementHandler.GetById,
 	)
 
-	mux.Handle("DELETE /body-measurements/{id}",
-		app.AuthorizationMiddlewares.NutritionistOnly(
-			app.MeasurementHandler.DeleteById,
-		),
+	mux.HandleFunc("DELETE /body-measurements/{id}",
+		app.MeasurementHandler.DeleteById,
 	)
 
 	fmt.Println("Server starting on port:3000")

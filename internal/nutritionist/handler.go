@@ -9,21 +9,21 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
 )
 
-type INutritionistHandler interface {
+type Handler interface {
 	GetNutritionistById(w http.ResponseWriter, r *http.Request)
 	UpdateNutritionistById(w http.ResponseWriter, r *http.Request)
 	DeleteNutritionistById(w http.ResponseWriter, r *http.Request)
 }
 
-type NutriotionistHandler struct {
-	service INutritionistService
+type handler struct {
+	service NutritionistManager
 }
 
-func NewNutritionistHandler(service INutritionistService) INutritionistHandler {
-	return &NutriotionistHandler{service}
+func NewNutritionistHandler(service NutritionistManager) Handler {
+	return &handler{service}
 }
 
-func (h *NutriotionistHandler) GetNutritionistById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetNutritionistById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	rawId := r.PathValue("id")
 
@@ -46,7 +46,7 @@ func (h *NutriotionistHandler) GetNutritionistById(w http.ResponseWriter, r *htt
 	response.WriteJSON(w, http.StatusOK, apiResponse)
 }
 
-func (h *NutriotionistHandler) UpdateNutritionistById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) UpdateNutritionistById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var payload nutritionistDtos.UpdateNutritionist
 
@@ -71,7 +71,7 @@ func (h *NutriotionistHandler) UpdateNutritionistById(w http.ResponseWriter, r *
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *NutriotionistHandler) DeleteNutritionistById(w http.ResponseWriter, r *http.Request) {
+func (h *handler) DeleteNutritionistById(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	id, idErr := valueobject.IdentifierFromString(r.PathValue("id"))

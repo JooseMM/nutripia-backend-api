@@ -30,7 +30,7 @@ func fromEntity(entity Nutritionist) entityDB {
 		firstname: entity.Name().Firstname(),
 		lastname:  entity.Name().Lastname(),
 		email:     entity.EmailAddress().String(),
-		birthDate: entity.BirthDate().Date(),
+		birthDate: entity.BirthDate().ToTime(),
 		password:  entity.Password().String(),
 	}
 }
@@ -64,11 +64,11 @@ func (entityDB) TableName() string {
 	return "nutritionists"
 }
 
-type Repository struct {
+type repository struct {
 	db *gorm.DB
 }
 
-type RepositoryManager interface {
+type Repository interface {
 	GetAll(ctx context.Context) ([]Nutritionist, *core.BaseError)
 	GetById(ctx context.Context, id valueobject.Identifier) (Nutritionist, *core.BaseError)
 	IsEmailTaken(
@@ -84,15 +84,15 @@ type RepositoryManager interface {
 	Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError
 }
 
-func NewNutritionistRepository(db *gorm.DB) (RepositoryManager, error) {
+func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
 	if err := db.AutoMigrate(&entityDB{}); err != nil {
-		return nil, err
+		return nil, core.UnexpectedError(err.Error())
 	}
 
-	return &Repository{db}, nil
+	return &repository{db}, nil
 }
 
-func (r *Repository) IsEmailTaken(
+func (r *repository) IsEmailTaken(
 	ctx context.Context,
 	emalAddress valueobject.Emailer,
 ) (bool, *core.BaseError) {
@@ -111,7 +111,7 @@ func (r *Repository) IsEmailTaken(
 	return exists, nil
 }
 
-func (r *Repository) GetAll(
+func (r *repository) GetAll(
 	ctx context.Context,
 ) ([]Nutritionist, *core.BaseError) {
 	var rawList []*entityDB
@@ -133,7 +133,7 @@ func (r *Repository) GetAll(
 	return list, nil
 }
 
-func (r *Repository) GetById(
+func (r *repository) GetById(
 	ctx context.Context,
 	id valueobject.Identifier,
 ) (Nutritionist, *core.BaseError) {
@@ -155,7 +155,7 @@ func (r *Repository) GetById(
 	return entity, nil
 }
 
-func (r *Repository) GetByEmailAddress(
+func (r *repository) GetByEmailAddress(
 	ctx context.Context,
 	emailAddress valueobject.Emailer,
 ) (Nutritionist, *core.BaseError) {
@@ -177,7 +177,7 @@ func (r *Repository) GetByEmailAddress(
 	return entity, nil
 }
 
-func (r *Repository) Create(
+func (r *repository) Create(
 	ctx context.Context,
 	entity Nutritionist,
 ) *core.BaseError {
@@ -189,7 +189,7 @@ func (r *Repository) Create(
 	return nil
 }
 
-func (r *Repository) Update(
+func (r *repository) Update(
 	ctx context.Context,
 	entity Nutritionist,
 ) *core.BaseError {
@@ -201,7 +201,7 @@ func (r *Repository) Update(
 	return nil
 }
 
-func (r *Repository) Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError {
+func (r *repository) Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError {
 	result := r.db.WithContext(ctx).Delete(&Entity{}, id.Key())
 	if result.Error != nil {
 		return core.UnexpectedError(result.Error.Error())

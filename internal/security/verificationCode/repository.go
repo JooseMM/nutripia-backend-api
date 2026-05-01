@@ -71,9 +71,9 @@ type Repository interface {
 	Delete(ctx context.Context, userId valueobject.Identifier) *core.BaseError
 }
 
-func NewVerificationCodeRepository(db *gorm.DB) (Repository, error) {
+func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
 	if err := db.AutoMigrate(&entityDB{}); err != nil {
-		return nil, err
+		return nil, core.UnexpectedError(err.Error())
 	}
 	return &entityRepository{db}, nil
 }

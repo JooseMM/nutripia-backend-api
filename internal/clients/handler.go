@@ -13,7 +13,7 @@ import (
 const UserIdKey = "userId"
 const RoleIdKey = "roleId"
 
-type ClientHandler interface {
+type Handler interface {
 	CreateClient(w http.ResponseWriter, r *http.Request)
 	GetClientById(w http.ResponseWriter, r *http.Request)
 	GetClientByNutritionist(w http.ResponseWriter, r *http.Request)
@@ -25,7 +25,7 @@ type handler struct {
 	service ClientManager
 }
 
-func NewClientHandler(service ClientManager) ClientHandler {
+func NewClientHandler(service ClientManager) Handler {
 	return &handler{service}
 }
 

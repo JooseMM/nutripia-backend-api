@@ -88,7 +88,7 @@ type Repository interface {
 	Delete(ctx context.Context, id valueobject.Identifier) *core.BaseError
 }
 
-func NewClientRepository(db *gorm.DB) (Repository, *core.BaseError) {
+func NewRepository(db *gorm.DB) (Repository, *core.BaseError) {
 	if err := db.AutoMigrate(&entityDB{}); err != nil {
 		return nil, core.UnexpectedError(err.Error())
 	}
