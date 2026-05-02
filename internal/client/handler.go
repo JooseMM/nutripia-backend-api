@@ -3,7 +3,7 @@ package clients
 import (
 	"net/http"
 
-	clientDtos "github.com/JooseMM/nutripia-backend-api/internal/clients/dtos"
+	clientDtos "github.com/JooseMM/nutripia-backend-api/internal/client/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/JooseMM/nutripia-backend-api/pkg/request"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"

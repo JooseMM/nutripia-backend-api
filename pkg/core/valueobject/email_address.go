@@ -10,33 +10,42 @@ type Emailer interface {
 	String() string
 }
 
-type EmailAddress struct {
+type EmailRequest struct {
+	Prefix string `json:"prefix"`
+	Domain string `json:"domain"`
+}
+
+func (dto *EmailRequest) ToValueObject() (Emailer, *core.BaseError) {
+	if dto.Prefix == "" {
+		return nil, core.ValidationError([]string{"Prefix: is required"})
+	}
+
+	if dto.Domain == "" {
+		return nil, core.ValidationError([]string{"Domain: is required"})
+	}
+
+	return &emailAddress{
+		prefix: dto.Prefix,
+		domain: dto.Domain,
+	}, nil
+}
+
+type emailAddress struct {
 	prefix string
 	domain string
 }
 
-func (e *EmailAddress) String() string {
+func (e *emailAddress) String() string {
 	return e.prefix + "@" + e.domain
 }
 
 func NewEmailAddress(raw string) (Emailer, *core.BaseError) {
-	var errList []string
-	email := strings.TrimSpace(raw)
-
-	if email == "" {
-		errList = append(errList, "EmailAddress: is required")
+	if raw == "" {
+		return nil, core.ValidationError([]string{"EmailAddress: is required"})
 	}
 
-	parts := strings.Split(email, "@")
-	if len(parts) < 2 {
-		errList = append(errList, "EmailAddress: wrong email address format")
-	}
-
-	if len(errList) > 0 {
-		return nil, core.ValidationError(errList)
-	}
-
-	return &EmailAddress{
+	parts := strings.Split(raw, "@")
+	return &emailAddress{
 		prefix: parts[0],
 		domain: parts[1],
 	}, nil

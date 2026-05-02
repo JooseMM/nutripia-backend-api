@@ -3,13 +3,13 @@ package authentication
 import (
 	"context"
 
-	"github.com/JooseMM/nutripia-backend-api/internal/notifications/email"
-	"github.com/JooseMM/nutripia-backend-api/internal/notifications/templates"
+	"github.com/JooseMM/nutripia-backend-api/internal/notification/email"
+	"github.com/JooseMM/nutripia-backend-api/internal/notification/templates"
 	"github.com/JooseMM/nutripia-backend-api/internal/nutritionist"
 	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/dtos"
-	authenticationDtos "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/dtos"
-	"github.com/JooseMM/nutripia-backend-api/internal/security/session"
-	"github.com/JooseMM/nutripia-backend-api/internal/security/verificationCode"
+	authenticationDtos "github.com/JooseMM/nutripia-backend-api/internal/authentication/dtos"
+	"github.com/JooseMM/nutripia-backend-api/internal/session"
+	"github.com/JooseMM/nutripia-backend-api/internal/verificationCode"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )

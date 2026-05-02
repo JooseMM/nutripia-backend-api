@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"golang.org/x/crypto/argon2"
@@ -23,6 +22,19 @@ type params struct {
 type Passworder interface {
 	String() string
 	IsEqual(rawPassword string) bool
+}
+
+type PasswordRequest struct {
+	Hash string
+}
+
+func (dto *PasswordRequest) ToValueObject() (Passworder, *core.BaseError) {
+	if dto.Hash == "" {
+		return nil, core.ValidationError([]string{"Hash: is required"})
+	}
+	return &password{
+		hash: dto.Hash,
+	}, nil
 }
 
 type password struct {
@@ -109,49 +121,9 @@ func NewPassword(p string) (Passworder, *core.BaseError) {
 		return nil, core.ValidationError([]string{"Password: is required"})
 	}
 
-	var errList []string
-
-	if len(p) < 8 {
-		errList = append(errList, "Password: must have a minimum of 8 characters.")
-	}
-	if len(p) > 72 {
-		errList = append(errList, "Password: must have a maximum of 72 characters.")
-	}
-
-	var hasUpper, hasLower, hasNumber, hasSpecial bool
-	for _, char := range p {
-		switch {
-		case unicode.IsUpper(char):
-			hasUpper = true
-		case unicode.IsLower(char):
-			hasLower = true
-		case unicode.IsDigit(char):
-			hasNumber = true
-		case unicode.IsPunct(char) || unicode.IsSymbol(char):
-			hasSpecial = true
-		}
-	}
-
-	if !hasUpper {
-		errList = append(errList, "Password: must have at least one uppercase letter")
-	}
-	if !hasLower {
-		errList = append(errList, "Password: must have at least one lowercase letter")
-	}
-	if !hasNumber {
-		errList = append(errList, "Password: must have at least one number")
-	}
-	if !hasSpecial {
-		errList = append(errList, "Password: must have at least one special character")
-	}
-
 	hash, err := hashPassword(p)
 	if err != nil {
-		errList = append(errList, err.Details...)
-	}
-
-	if len(errList) > 0 {
-		return nil, core.ValidationError(errList)
+		return nil, err
 	}
 
 	return &password{hash}, nil

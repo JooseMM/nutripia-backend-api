@@ -1,7 +1,7 @@
 package bodyMeasurement
 
 import (
-	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/dtos"
+	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurement/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 

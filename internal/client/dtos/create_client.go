@@ -7,17 +7,22 @@ import (
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
-type RawUpdateClientRequest struct {
+type RawCreateClientRequest struct {
 	Firstname    string    `json:"firstname"`
 	Lastname     string    `json:"lastname"`
 	EmailAddress string    `json:"emailAddress"`
 	BirthDate    time.Time `json:"birthDate"`
 }
 
-func (dto *RawUpdateClientRequest) ToValueObject() (*UpdateClientRequest, *core.BaseError) {
-	var errList []string
+type CreateClientRequest struct {
+	Name         valueobject.Namer
+	EmailAddress valueobject.Emailer
+	BirthDate    valueobject.Dater
+}
 
-	name, err := valueobject.NewName(dto.Firstname, dto.Lastname)
+func (dto *RawCreateClientRequest) ToValueObject() (*CreateClientRequest, *core.BaseError) {
+	var errList []string
+	name, err := valueobject.NewFullName(dto.Firstname, dto.Lastname)
 	if err != nil {
 		errList = append(errList, err.Details...)
 	}
@@ -32,15 +37,13 @@ func (dto *RawUpdateClientRequest) ToValueObject() (*UpdateClientRequest, *core.
 		errList = append(errList, err.Details...)
 	}
 
-	return &UpdateClientRequest{
+	if len(errList) > 0 {
+		return nil, core.ValidationError(errList)
+	}
+
+	return &CreateClientRequest{
 		Name:         name,
 		EmailAddress: email,
 		BirthDate:    birthDate,
 	}, nil
-}
-
-type UpdateClientRequest struct {
-	Name         valueobject.Namer
-	EmailAddress valueobject.Emailer
-	BirthDate    valueobject.Dater
 }

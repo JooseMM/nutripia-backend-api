@@ -34,7 +34,7 @@ func (d *clients) toEntity() (Client, *core.BaseError) {
 
 	ownerId := valueobject.IdentifierFromValue(d.OwnerId)
 
-	name, err := valueobject.NewName(d.Firstname, d.Lastname)
+	name, err := valueobject.NewFullName(d.Firstname, d.Lastname)
 	if err != nil {
 		errList = append(errList, err.Details...)
 	}

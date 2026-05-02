@@ -41,7 +41,7 @@ func fromEntity(entity Nutritionist) nutritionists {
 func (e *nutritionists) toEntity() (Nutritionist, *core.BaseError) {
 	var errList []string
 
-	name, err := valueobject.NewName(e.Firstname, e.Lastname)
+	name, err := valueobject.NewFullName(e.Firstname, e.Lastname)
 	if err != nil {
 		errList = append(errList, err.Details...)
 	}

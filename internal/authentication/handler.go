@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	authenticationDtos "github.com/JooseMM/nutripia-backend-api/internal/authentication/dtos"
 	nutritionistDtos "github.com/JooseMM/nutripia-backend-api/internal/nutritionist/dtos"
-	authenticationDtos "github.com/JooseMM/nutripia-backend-api/internal/security/authentication/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/JooseMM/nutripia-backend-api/pkg/request"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"
@@ -31,17 +31,25 @@ func NewAuthenticationHandler(service IAuthenticationService) Handler {
 func (h *handler) RegisterNutritionist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	dto, err := request.DecodeJSON[nutritionistDtos.RawRegisterNutritionist](w, r)
+	dto, err := request.DecodeJSON[nutritionistDtos.RegisterNutritionistInput](w, r)
+	if err != nil {
+		response.WriteJSON(w, err.StatusCode, err)
+		return
+	}
+	fmt.Printf("firstname: %v", dto.Fullname.Firstname)
+	fmt.Printf("lastname: %v", dto.Fullname.Lastname)
+	fmt.Printf("%+v", dto.BirthDate)
+	fmt.Printf("%+v", dto.EmailAddress)
+	fmt.Printf("%+v", dto.Password)
+	fmt.Printf("%+v", dto.Rut)
+
+	payload, err := dto.ToEntity()
 	if err != nil {
 		response.WriteJSON(w, err.StatusCode, err)
 		return
 	}
 
-	payload, err := dto.ToValueObject()
-	if err != nil {
-		response.WriteJSON(w, err.StatusCode, err)
-		return
-	}
+	fmt.Printf("%+v", dto)
 
 	failure := h.service.RegisterNutritionist(r.Context(), *payload)
 	if failure != nil {

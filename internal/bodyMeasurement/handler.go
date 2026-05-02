@@ -3,8 +3,8 @@ package bodyMeasurement
 import (
 	"net/http"
 
-	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurements/dtos"
-	"github.com/JooseMM/nutripia-backend-api/internal/clients"
+	bodyMeasurementDtos "github.com/JooseMM/nutripia-backend-api/internal/bodyMeasurement/dtos"
+	"github.com/JooseMM/nutripia-backend-api/internal/client"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 	"github.com/JooseMM/nutripia-backend-api/pkg/request"
 	"github.com/JooseMM/nutripia-backend-api/pkg/response"

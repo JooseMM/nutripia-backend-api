@@ -1,5 +1,3 @@
-# Binary
-main
 # If you use 'go build -o app', ignore that too
 app
 # Enviroments

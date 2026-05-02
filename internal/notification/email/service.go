@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/JooseMM/nutripia-backend-api/internal/notifications/templates"
+	"github.com/JooseMM/nutripia-backend-api/internal/notification/templates"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 )
 

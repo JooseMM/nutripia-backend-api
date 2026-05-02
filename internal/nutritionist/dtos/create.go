@@ -1,64 +1,52 @@
 package nutritionistDtos
 
 import (
-	"time"
-
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
 
-type RawRegisterNutritionist struct {
-	Firstname    string    `json:"firstname"`
-	Lastname     string    `json:"lastname"`
-	EmailAddress string    `json:"emailAddress"`
-	Password     string    `json:"password"`
-	BirthDate    time.Time `json:"birthDate"`
-	RUT          string    `json:"rut"`
+type RegisterNutritionistInput struct {
+	Fullname     valueobject.FullnameRequest `json:"fullname"`
+	EmailAddress valueobject.EmailRequest    `json:"emailAddress"`
+	Password     valueobject.PasswordRequest `json:"password"`
+	BirthDate    valueobject.DateRequest     `json:"birthDate"`
+	Rut          valueobject.RutRequest      `json:"rut"`
 }
 
-func (dto *RawRegisterNutritionist) ToValueObject() (*RegisterNutritionist, *core.BaseError) {
+func (dto *RegisterNutritionistInput) ToEntity() (*RegisterNutritionist, *core.BaseError) {
 	var errList []string
 
-	name, nameErr := valueobject.NewName(dto.Firstname, dto.Lastname)
-	if nameErr != nil {
-		errList = append(errList, nameErr.Details...)
+	fullname, err := dto.Fullname.ToValueObject()
+	if err != nil {
+		errList = append(errList, err.Details...)
 	}
 
-	email, emailErr := valueobject.NewEmailAddress(dto.EmailAddress)
-	if emailErr != nil {
-		errList = append(errList, emailErr.Details...)
+	email, err := dto.EmailAddress.ToValueObject()
+	if err != nil {
+		errList = append(errList, err.Details...)
 	}
 
-	password, passwordErr := valueobject.NewPassword(dto.Password)
-	if passwordErr != nil {
-		errList = append(errList, passwordErr.Details...)
+	password, err := dto.Password.ToValueObject()
+	if err != nil {
+		errList = append(errList, err.Details...)
 	}
 
-	birthDate, birthDateErr := valueobject.NewBirthDate(dto.BirthDate)
-	if birthDateErr != nil {
-		errList = append(errList, birthDateErr.Details...)
-	}
-
-	rut, rutErr := valueobject.NewRUT(dto.RUT)
-	if rutErr != nil {
-		errList = append(errList, rutErr.Details...)
-	}
-
-	if len(errList) > 0 {
-		return nil, core.ValidationError(errList)
+	rut, err := dto.Rut.ToValueObject()
+	if err != nil {
+		errList = append(errList, err.Details...)
 	}
 
 	return &RegisterNutritionist{
-		name:         name,
+		fullName:     fullname,
 		emailAddress: email,
 		password:     password,
-		birthDate:    birthDate,
+		birthDate:    dto.BirthDate.ToValueObject(),
 		rut:          rut,
 	}, nil
 }
 
 type RegisterNutritionist struct {
-	name         valueobject.Namer
+	fullName     valueobject.Namer
 	emailAddress valueobject.Emailer
 	password     valueobject.Passworder
 	birthDate    valueobject.Dater
@@ -74,7 +62,7 @@ func (dto *RegisterNutritionist) Password() valueobject.Passworder {
 }
 
 func (dto *RegisterNutritionist) Name() valueobject.Namer {
-	return dto.name
+	return dto.fullName
 }
 
 func (dto *RegisterNutritionist) BirthDate() valueobject.Dater {

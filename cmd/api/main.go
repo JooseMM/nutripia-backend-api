@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/JooseMM/nutripia-backend-api/cmd/app/app"
 	"github.com/JooseMM/nutripia-backend-api/internal/storage"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
+	"github.com/JooseMM/nutripia-backend-api/pkg/core/app"
 	"github.com/joho/godotenv"
 )
 

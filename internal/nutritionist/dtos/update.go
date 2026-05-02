@@ -35,7 +35,7 @@ func (u *UpdateNutritionist) EmailAddress() valueobject.Emailer {
 func (dto *RawUpdateNutritionistRequest) ToValueObject() (*UpdateNutritionist, *core.BaseError) {
 	var errList []string
 
-	name, nameErr := valueobject.NewName(dto.Firstname, dto.Lastname)
+	name, nameErr := valueobject.NewFullName(dto.Firstname, dto.Lastname)
 	if nameErr != nil {
 		errList = append(errList, nameErr.Details...)
 	}

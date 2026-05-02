@@ -29,6 +29,18 @@ type date struct {
 	dateType DateType
 }
 
+type DateRequest struct {
+	Value    time.Time
+	DateType DateType
+}
+
+func (dto *DateRequest) ToValueObject() Dater {
+	return &date{
+		value:    dto.Value,
+		dateType: dto.DateType,
+	}
+}
+
 func (d *date) Type() DateType {
 	return d.dateType
 }

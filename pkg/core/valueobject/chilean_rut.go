@@ -6,14 +6,31 @@ type RUTer interface {
 	ToString() string
 }
 
-type Rut struct {
+type rut struct {
 	value string
 }
 
-func (r *Rut) ToString() string {
+type RutRequest struct {
+	Value string
+}
+
+func (dto *RutRequest) ToValueObject() (RUTer, *core.BaseError) {
+	if dto.Value == "" {
+		return nil, core.ValidationError([]string{"RUT: invalid rut format"})
+	}
+
+	return &rut{
+		value: dto.Value,
+	}, nil
+}
+
+func (r *rut) ToString() string {
 	return r.value
 }
 
 func NewRUT(raw string) (RUTer, *core.BaseError) {
-	return &Rut{value: raw}, nil
+	if raw == "" {
+		return nil, core.ValidationError([]string{"RUT: is required"})
+	}
+	return &rut{value: raw}, nil
 }

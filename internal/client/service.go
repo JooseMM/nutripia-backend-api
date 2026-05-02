@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	clientDtos "github.com/JooseMM/nutripia-backend-api/internal/clients/dtos"
+	clientDtos "github.com/JooseMM/nutripia-backend-api/internal/client/dtos"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core"
 	"github.com/JooseMM/nutripia-backend-api/pkg/core/valueobject"
 )
